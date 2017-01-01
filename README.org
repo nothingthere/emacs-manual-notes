@@ -1,11 +1,206 @@
 #+TITLE: 《Emacs Manual》学习笔记
 # ------------------------------------------------- *粗略描述，不理解的问题阅读后文后尝试解决*
-* 显示结构
+* 显示界面组织
+  /frame/ ：整个Emacs占据的图像窗口，或terminal屏幕。
+** point
+   *光标实际所在位置为，所处字符前。*
+** echo区域
+   | C-x = | 显示光标所在处字符的信息 |
+
+   echo区域显示提示信息和警告等信息。通常显示速度很快，如需查看，都在
+   *Message*中。
+
+   *Message*buffer中可见信息条数，可通过变量message-log-max变量控制。
+** 模式行
+   模式行位于echo区域上方，其中的字符格式为：
+
+   cs:ch-fr buf pos line (major minor)
+
+   各部分字符的含义为：
+   - cs: 由4个字符组成：
+	 1. codeing system，字符系统。'-'表示无特殊字符处理，'='表示no
+        conversion?，'1'表示ISO Latin-1。
+	 2. 键盘输入字符系统。
+	 3. 命令行输出字符系统。
+	 4.
+   - ch：'--'表示buffer内容与磁盘文件内容一致，'\*\*'表示文件未保存，'%%'表
+     示未修改过的自读文件，'%\*'表示未保存的自读文件。
+   - ch后的字符：一般为'-'，如果当前buffer为远程文件内容，以'@'标记。
+   - fr：Frame的名称，起始frame以'F1'表示。
+   - pos：当前行在整个buffer中的位置。
+   - line：当前行数。可通过column-number-mode函数实现显示当前列数。
+   - major minor：当前的major模式。只有1个; minor：当前的minor模式，
+     可有多个。
+	 一些与模式(mode)不相关的内容有时也会出现在此括号内，如'Narrowed'表
+     示只显示部分buffer文本。当使用处于递归编辑状态时，外层还会包裹方
+     括号。
+** 菜单栏
+   在命令行环境中，可通过ttm-menubar打开菜单。
 * 字符、按键和命令
-  # ------------------------------------------------- *？？？*
+** 可输入的内容
+   Emacs将键盘上的字符分为3类：
+   1. 直接输入类，如'a' 'b' '3'等。
+   2. 控制字符，如RET TAB DEL ESC F1 Home等。
+   3. 修饰字符Ctrl和Meta，用来执行命令。
+
+   图形界面上通过鼠标实现的行为，成为 /输入事件/ 。
+
+** 组合键
+   组合键分为 /前缀键/ 如C-c和C-x, /完整键/ 如C-f和C-g。组合键要么是前
+   缀键，要么是完整键。
+
+   常用的前缀键有：C-c, C-h, C-x, C-x RET, C-x @, C-x a, C-x n, C-x r,
+   C-x v, C-x 4, C-x 5, C-x 6, ESC, M-g和M-o。
+** 按键和命令
+   每个有效快捷键都对应一个命令，即elisp函数。
+   # -------------------------- *？？？*
 * 进入和退出Emacs
+** 进入Emacs
+   将变量 *inhibit-startup-screen* 设置为non-*nil* 值，可禁用初次进入Emacs时
+   的说明页面。
+
+   通过设置 *initial-buffer-choice* 变量，可指定启动Emacs时默认打开的文件/
+   文件夹。
+
+** 退出Emacs
+   | C-x C-c | (*save-buffers-kill-terminal*)，退出emacs |
+   | C-z     | (*suspend-emacs*)，最小化emacs            |
+
+   将 *confirm-kill-emacs* （默认为nil）设置为判断函数，可实现退出emacs前再次确认，
+   如 *yes-or-no-p* 。
+
+   如果直接退出Emacs，可执行命令 *kill-emacs*。
+
 * 基本编辑命令
-  # ------------------------------------------------- *需变学习变练习，直到熟练为止*
+** 文本插入
+   使用 *auto-fill-mode* 可将过长的行自动换行。行数由变量
+   *fill-column* 变量控制。
+*** 输入特殊字符
+   	使用 *quote-insert* (C-q)可输入特殊字符，如C-c。
+
+	不仅可通过特殊键输入，还可使用字母编码数字输入，如“C-q 1 0 1 B”的
+	输入结果为"AB"；编码 的进制可通过 *read-quoted-char-radix* 变量控
+	制。
+
+	还可使用 *insert-char* (C-x 8 RET) 选择输入特殊字符。如：
+
+	C-x 8 <RET> infinity <RET>
+
+	C-x 8 <RET> 221e <RET>
+** 改变光标位置
+   | C-f              | *forward-chae*                   | 向前移动一个字符                   |
+   | <RIGHT>          | *right-char*                     | 同上，不过在右->左语言环境下有区别 |
+   | C-b              | *backward-char*                  | 向右移动一个字符                   |
+   | <LEFT>           | *left-char*                      | 同上，不过在右->左语言环境下有区别 |
+   | C-n <DOWN>       | *next-line*                      | 下一行，列数不变                   |
+   | C-p <UP>         | *previous-line*                  | 上一行，列数不变                   |
+   | C-a <Home>       | *move-beginning-of-line*         | 移至行首                           |
+   | C-e <End>        | *move-end-of-line*               | 移至行尾                           |
+   | M-r              | *move-to-window-line-top-bottom* | 在窗口的上中下3个位置移动          |
+   | M-<              | *beginning-of-buffer*            | 移至buffer最前                     |
+   | M->              | *end-of-buffer*                  | 移至buffer最后                     |
+   | C-v              | *scroll-up-command*              | 向下翻页                           |
+   | M-v              | *scroll-down-command*            | 向上翻页                           |
+   | M-g c            | *goto-char*                      | 移至buffer的第N个字符处            |
+   | M-g g 或 M-g M-g | *goto-line*                      | 移至第N行                          |
+   | M-g <TAB>        | *move-to-column*                 | 移至当前行的第N列                  |
+   | C-x C-n          | *set-goal-column*                | 设置以后移上下移动时，都在当前列   |
+   | C-u C-x C-n      |                                  | 取消C-x C-n设置的全局列数          |
+
+   光标移动时有 /逻辑行/ 和 /可见行/ 的区别。C-p和C-n命令默认使用 /可
+   见行/，如需使用 /逻辑行/ ，需设置 *line-move-visual* 值为nil。
+
+   当C-n命令移至最后一行后，再执行该命令就无作用。如果将变量
+   *next-line-add-newlines* 设置为non-line，可添加新行。
+
+** 文本剪切
+   | <BACKSPACE> | *delete-backward-char* | 删除前面一个字符                         |
+   | <Delete>    | *delete-forward-char*  | 删除后面一个字符。如果有选中区域，则删除 |
+   | C-d         | *delete-char*          | 删除后面一个字符，不管有无选中区域。     |
+   | C-k         | *kill-line*            | 剪切至行末                               |
+   | M-d         | *kill-word*            | 剪切后面一个单词                         |
+   | M-<DEL>     | *backward-kill-word*   | 剪切至前面一个单词                       |
+
+** Undo（返回）
+   C-/、C-x u和C-_ 等价。
+** 文件操作
+   | C-x C-f | *open-file*   | 打开文件   |
+   | C-x C-s | *save-buffer* | 保存buffer |
+
+** 获取帮助
+   获取帮助的快捷键都以C-h开头，如C-h k *describe-key*，获取快捷键
+   帮助。
+
+** 空白行
+   - C-o *open-line* ：插入新行，光标位置保持不变。
+   - C-x C-o *delete-blank-lines* ：删除空行：
+	 - 如果有多个空行，仅保留1个。
+	 - 如果只有1个空行，将其删除。
+	 - 如果当前不是空行，删除后面的所有空行。
+
+** 逻辑行延续
+   如果某行过长不能完全显示，Emacs会在末尾使用'\'表示为逻辑换行。如果
+   不逻辑换行，只在单行显示，就在末尾使用'$'标记。
+
+   对行的操作命令除C-p和C-n外，都默认针对逻辑行，而非显示行。
+** 光标所在处信息
+   - *what-line* ：显示当前行数。
+
+	 虽然状态栏也会显示当前行数，但此命令会提示buffer是否被Narrowed。
+   - *line-number-mode* 和 *column-number-mode* ：显示/关闭状态栏的行
+     数和列数。
+   - *cound-words-region* M-=：显示选中区域的行数、单词数和字符数。
+
+	 如果带参数执行此命令，即C-u M-=，则针对整个buffer。
+   - *count-words* ：显示整个buffer的行数、单词数和字符数。如果有选中
+     文本，则相当于 *count-words-region* 。
+   - *what-cursor-position* C-x =：显示光标后面一个字符的位置和列数。
+
+	 显示格式为：
+	 Char: c (99, #o143, #x63) point=28062 of 36168 (78%) column=53
+
+	 其含义为：
+	 Char: 字符 (10进制, 8进制, 16进制) point=buffer中的位置 of 整个
+	 buffer的字符数 (以百分比占的位置) column=列数。
+
+	 如果整个buffer被Narrowed，会有额外信息：<Narrowed后的位置，Widden后的
+     位置>。
+   - *hl-line-mode* ：高亮/不高亮显示当前行。
+   - *size-indication-mode* ：显示/不显示当前buffer的大小。
+
+** 数字参数
+   传递数字参数最简单的方式是使用<Meta>键，如M-5 C-n为向下移动5行。
+
+   如果参数是负数，则使用M--，不传数字是 /一般/ 默认为-1。
+
+   M-5 0 C-n不是先插入5个0，再向下移动一行，实际的作用时向下移动50行。
+   M-5 C-u 0，才是插入5个0，此处C-u的作用为取消前面的数字参数。
+
+   - *universal-argument* C-u：也可传递数字参数，不跟数字的负号默认为-1。
+
+	 还有一项功能就是将后面的命令重复4次。如C-u C-n为向下移动4行，C-u
+     C-u C-n为向下移动16行。
+
+	 如果要重复输入插入字符，可跟数字参数，如C-u 6 0 a为输入60个a；如
+     果要重复输入60个0，则为C-u 6 0 C-u 0。
+
+	 一些命令需要有参数，单会忽略参数值如M-q *fill-paragraph* 。
+
+	 一些命令将数字参数作为重复次数，单没有参数时则效果不同。如C-k
+     *kill-line* ，带数字参数时删除行时，会顺带删除后面的换行符，即不
+     留空行。
+
+   # -------------------------- *需边学习变练习，直到熟练为止*
+
+** 重复命令
+   如“M-x COMMAND-NAME <RET>”这类命令，可通过C-u传入参数指定重复次数，
+   但如果这些命令需输入内容，此方法就不能生效。
+
+   这时需用C-x z *repeat* 命令重复，如需传入参数，默认使用上一条命令的
+   参数。
+
+   如使用了命令C-u 2 0 C-d删除了20个字符，这时再使用C-x z z z就可删除
+   后面60个字符。
 * minibuffer
 * 使用函数名执行命令
 * Help
@@ -15,14 +210,14 @@
 * 显示控制
 * 搜索和替换
 * 修改输入的命令
-  # ------------------------------------------------- *intermediate-level特点*
+  # -------------------------- *intermediate-level特点*
 * 按键宏
 * 文件操作
 * 使用多个buffer
 * 多窗口
 * Frams和图形显示
 * 字符设置国际化
-  # ------------------------------------------------- *需要时阅读*
+  # -------------------------- *需要时阅读*
 * Major和Minor模式
 * 缩进
 * 非编程文本相关命令
@@ -38,5 +233,5 @@
 * 插件（package）管理
 * 定制
 * 常见问题排查
-  # ------------------------------------------------- *附录*
+  # --------------------------- *附录*
 * 附录C：Emacs命令行启动参数
