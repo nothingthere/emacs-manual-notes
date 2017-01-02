@@ -202,6 +202,164 @@
    如使用了命令C-u 2 0 C-d删除了20个字符，这时再使用C-x z z z就可删除
    后面60个字符。
 * minibuffer
+  minibuffer的作用是输入复杂命令，如文件名、buffer名、命令名称或Lisp表
+  达式。
+** 基本使用方法
+   使用'minibuffer-prompt'高亮。
+
+   <RET>提交输入，C-g取消输入。
+
+   *minibuffer-electric-mode* 还没理解？？？
+
+   由于minibuffer与echo区域公用一个窗口，当输入内容时，如果有报错或提
+   示信息，将立即显示，只有继续输入时才是再次启动minibuffer。
+** 输入文件名
+   使用C-x C-f *find-file* 打开文件时，输入文件名有一下快捷方式：
+   - “..” 代表上一级文件夹。如"a/b/../foo.el"的实际含义为"a/foo.el"。
+   - “/” 表示忽略前面的所有内容。如"/a/b//etc/termcap"的实际含义为
+     "/etc/termcap"。
+
+	 可使用 *file-name-shadow-mode* 打开/关闭此项功能。
+   - "~" 表示home目录，如“~/emma.txt”。所有"~"之前的内容会被忽略。
+   - 可使用C-a C-k删除所有默认文件路径。
+
+   将变量 *insert-default-directory* 设置为nil时，提示输入文件名时不会
+   有默认内容，不过相对当前文件的路径依然有效。
+** 在其中编辑
+   由于在minibuffer中<RET>表示提交，要输入新行，需使用C-q C-j或C-o
+   *open-line*。
+
+   minibuffer，可同普通窗口一样使用编辑命令。如使用C-a C-k删除行；还可
+   与普通编辑窗口间来回跳转，相互剪切/粘贴文本等。不过也有限制，不如不
+   可分屏。
+
+   *resize-mini-windows* 变量可控制minibuffer的大小变化，取值可为：
+   - grow-only：当添加新行时，自动变高。
+   - t：当减少行后，还会变矮。
+   - nil：一直不改变高度。
+
+   *max-mini-window-height* 变量可控制minibuffer高矮变化时的最大高度：
+   - 浮点数：表示占整个窗口的百分比。
+   - 整数：表示行数。
+   - nil：不自动改变高度。
+
+   可使用C-M v *scroll-other-window* 命令向下滚动“另一个”窗口。
+** 补全
+*** 例子
+	使用补全方式输入"M-x auto-fill-mode <RET>"的方式为：
+
+	"M-x a u <TAB> - f <TAB>"。
+*** 命令
+	- *minibuffer-complete* <TAB>：尽量补全，如不能补全则列出备选。
+	- *minibuffer-complete-word* <SPC>：补全光标处的单词，对有空格的参
+      数无效，如文件名。
+	- *minibuffer-complete-and-exit* <RET>：提交命令，可能在提交前补全。
+	- *minibuffer-complete-help* ?：列出所有备选。
+	- *switch-to-completion* M-v：跳转到备选窗口。在此窗口中的操作有：
+	  1. *choose-completion* <RET>：选中。
+	  2. *next-completion* <RIGHT>：下一条。
+	  3. *previous-completion* <LEFT>：上一条。
+*** 退出
+	使用 *minibuffer-complete-and-exit* 命令提交命令时，可能有以下4种
+	行为：
+	- "strict completion"：只接受匹配补全的命令，即存在的命令或立即补
+      全后存在的命令。如果不匹配，则保留在minibuffer内，显示提示信息，
+      此时可使用C-g退出。
+
+	  比如输入“M-x”后直接回车。
+
+	- "cautious completion"：同上一类型相同，唯一的区别是当可立即补全
+      时，仅补全，不提交命令，需手动使用<RET>提交。
+
+	  比如只读取已存在的文件名。
+
+	- “permissive completion”：允许各种输入，备选列表只做建议。输入
+      <RET>不补全，仅提交。
+
+	- "permissive completion with confirmation"：??
+
+	可通过设置 *confirm-noexistence-file-or-buffer* 改变确认（confirm）
+	行为：
+	- 默认值为after-completion，即上面的行为。
+	- nil，不提示确认，即"permissive completion"。
+	- 其它non-nil值，询问上一条命令是否为<TAB>。？？？
+
+*** 如何选择补全备选
+	Emacs通过变量 *completion-styles* 中的类型依次选择备选，如果前一种
+	不能获取备选尝试后一种，直到找到为止。备选类型依次有：
+	- basic：匹配与光标前完全相同的的内容。如果光标后有文本，将其作为
+      补全后的子字符串。
+	- partial-completion：将空格或'-'隔开的单词分别补全。如将"em-l-m"
+      补全为"emacs-lisp-mode"。
+
+	  此外将"*"作为通配符，匹配任意字符。
+	- emacs22：同“basic”方式相同，只是会忽略光标后的文本。
+
+	下面还有2种方式，可将其添加到 *completion-styles* 中:
+	- substring：备选需匹配光标前的文本加光标后的文本。比如minibuffer
+      中只有文本"foobar"，且光标在"foo"与"bar"之间，备选可为
+      "AfooBbarC"，其中A、B、C可为任意文本（空字符串也可）。
+	- initials：如将"lch"匹配为"list-command-history"。
+
+	可通过设置 *completion-category-overrides* 实现在不同环境中使用不
+	同补全方式。
+*** 配置
+	- 大小写：补全会区分大小写，如"AU"不会出现"auto-fill-mode"的备选。
+
+	  - *read-file-name-completion-ignore-case* ：设置读取文件名时是否
+        区分大小写。在文件系统区分大小写的系统中默认为nil，如Unix；在
+        文件系统不区分大小写的系统中默认为non-nil，如Windows。
+
+	  - *read-buffer-completion-ignore-case* ：同上，不过针对的是buffer
+        名称。
+	- 忽略文件：通过设置变量 *completion-ignored-extensions* 变量来过
+      滤文件名。文件后缀名在此链表变量中的文件会被忽略。
+
+	  当所有备选文件都被忽略时，就都不忽略。
+
+	  当列出备选时，Emacs会忽略此变量。
+	- *completion-auto-help* ：当设置为nil时，只有输入"?"时才列出备选。
+      当设置为'lazy时，只有第2此使用<TAB>时才列出备选。
+	- *completion-cycle-threshold* ：当设置为non-nil时，使用<TAB>时逐
+      个循环最匹配补全。如果为数字N时，仅在只有<=N个备选时才循环。
+** 历史命令
+   - *previous-history-element* M-p：上一条历史命令。
+   - *next-history-element* M-n：下一条历史命令。
+   - *previous-match-history* M-r REGEXP：满足REGEXP的上一条历史命令。
+   - *next-match-history* M-s REGEXP：满足REGEXP的下一条历史命令。
+
+   - *history-length* ：历史命令存储的最大个数，如果为t表示无上限。
+   - *history-delete-duplicates* ：是否删除重复历史命令中重复的条目，
+     如果为non-nil，删除原有命令中与当前命令相同的条目。
+** 重复执行命令
+   每条用“M-x”形式执行的命令都存储在 *command-history* 变量中。
+   - *repeat-complex-command* C-x <ESC> <ESC>：重复执行上条使用"M-x"执
+     行的命令。
+
+	 使用此命令后对应的lisp表达式会显示在minibuffer内，可直接使用<RET>
+     执行，也可编辑后执行。
+
+	 可使用M-p和M-n在历史命令中选择。
+
+	 可将变量 *isearch-resume-in-command-history* 设置为non-nil值，实
+     现反向搜索。
+   - *list-command-history* ：列出所有变量 *command-history* 中保存的
+     命令。
+** 密码
+   当需输入密码时（如打开远程文件），输入的内容会显示为“.”，且不会记录
+   输入密码这条历史命令。除下列编辑命令外，minibuffer中的任何编辑命令
+   都不可用：
+   - <DEL>：删除字符
+   - C-u：清空已输入的密码
+   - C-g：放弃
+   - C-y：粘贴
+   - <ECS>或<RET>：提交密码
+** yes-or-no提示
+   对需确认的操作，Emacs会提示是否执行，在minibuffer中显示"yes-or-no"
+   字样。如文件另存为命令C-x C-w *write-file* 。
+
+   由于也是在minibuffer中，所以所有minibuffer相关的命令都可用，如C-v和
+   M-v翻页，M-p和M-n选择等。
 * 使用函数名执行命令
 * Help
 * 标记（mark）和区域（region）
