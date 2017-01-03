@@ -361,7 +361,107 @@
    由于也是在minibuffer中，所以所有minibuffer相关的命令都可用，如C-v和
    M-v翻页，M-p和M-n选择等。
 * 使用函数名执行命令
+  每一个Emacs命令都有一个名字，即函数名，除绑定快捷键的命令外，都只能
+  使用命令M-x *execute-extended-command* 命令执行。
+
+  如需不提示命令对应的快捷键，可将变量 *suggest-key-bindings* 设置为nil。
 * Help
+  如果想查找Emacs的某种特性，还不直到它叫什么和哪里去找，一般的查找顺
+  序为：
+  1. 尝试apropos-command命令。
+  2. 查看手册索引。
+  3. 查看FAQ。
+  4. 同包关键字查找。
+
+  --
+  - C-h a TOPIC *apropos-command* ：通过输入关键字，查找相应命令。可以
+    是多个关键字。
+  - C-h i d m emacs <RET> i TOPIC <RET>：查看Emacs Info手册中有TOPIC索
+    引的条目，使用','查看下一条匹配结果。
+  - C-h i d m emacs <RET> s TOPIC <RET>：同上一个命令相同，不过匹配文
+    本中有TOPIC的章节。
+  - C-h C-f *view-emacs-FAQ* ：显示Emacs的FAQ页面。
+  - C-h p *finder-by-keyword* ：通过关键字查找插件说明。
+** 获取帮助命令概览（按字母顺序排序）
+   - C-h a TOPIC *apropos-command* ：列出命令含TOPIC的命令。
+
+	 如果是多个关键字，结果会至少满足2个其中的关键字。也可使用正则表达
+     式。通常使用的关键字如下：
+
+	 char, line, word, sentence, paragraph, region, page, sexp, list,
+     defun, rect, buffer, frame, window, face, file, dir, register,
+     mode, beginning, end, forward, backward, next, previous, up, down,
+     search, goto, kill, delete, mark, insert, yank, fill, indent, case,
+     change, set, what, list, find, view, describe, default.
+
+	 如果变量 *apropos-do-all* 值为non-nil，结果会更多，不过搜索速度也
+     相应变慢。
+
+	 除 *apropos-documentation* 命令外，所有apropos命令执行结果都按字
+     母顺序排序，如果需按相关度排序，需将变量 *apropos-sort-by-scores*
+     设置为non-nil。 *apropos-documentation* 执行结果默认按相关度排序，
+     如需按字母顺序排序，可设置 *apropos-documentation-sort-by-scores*
+     设置为nil。
+
+   - C-h b *describe-bindings* ：列出所有有效快捷键，排序顺序为
+     minor-mode -> major-mode -> 全局绑定。
+   - C-h c KEY *describe-key-briefly* ：简单描述快捷键KEY，如需更详细
+     信息，可使用C-h k快捷键。
+   - C-h d TOPIC *apropos-documentation* ：描述文档内有TOPIC的函数和变
+     量。
+   - C-h e *view-echo-area-message* ：显示*Message*buffer。
+   - C-h f FUNCTION *describe-function* ：描述函数。
+   - C-h h *view-hello-file* ：显示"HELLO"文件，查看语言支持。
+   - C-h i *info* ：运行Info程序，查看内置文档。
+
+	 如需打开两个Info程序，需在C-h i前添加数字参数。
+
+   - C-h k *describe-key* KEY：查看快捷键KEY对应命令的文档。
+   - C-h l *view-lossage* ：查看前最近300个按键输入。
+
+	 当误输入一些命令，导致Emacs崩溃后，可通过此命令查看输入过的所有内
+     容。
+
+   - C-h m *describe-mode* ：描述当前mode。
+   - C-h n *view-emacs-new* ：查看当前版本的Emacs改进。
+   - C-h p *finder-by-keyword* ：按类型列出插件。
+   - C-h P PACKAGE *describe-package* ：显示PACKAGE的文档。
+   - C-h r *info-emacs-manual* ：阅读Emacs内置手册。
+   - C-h s *describe-syntax* ：显示当前“语言表（syntax table）”。即哪
+     个字符为分隔符，哪个字符为单词的一部分等。？？？
+   - C-h t *help-with-tutorial* ：进入Emacs的内置交互式入门教程。
+   - C-h v VAR *describe-variable* ：显示变量VAR的文档。
+   - C-h w COMMAND *where-is* ：显示哪个快捷键可执行命令COMMAND。
+
+	 C-h c为显示快捷键的简略信息，C-h k为显示快捷键对应函数的文档，C-h
+     K为进入Info中有关快捷键的节点，而C-h w为列出与命令相关的快捷键。
+
+   - C-h C *describe-codeing-system* ：查看“Coding system（编码系
+     统）”。？？？
+   - C-h F COMMAND *Info-goto-emacs-command-node* ：进入Info中关于
+     COMMAND的节点中。
+   - C-h I METHOD *describe-input-method* ：描述输入法。
+   - C-h K KEY *Info-goto-emacs-key-command-node* ：进入Info中关于快捷
+     键KEY的节点。
+   - C-h L LANGUAGE-ENV *describe-language-enviroment* ：描述
+     LANGUAGE-ENV的编码系统和输入法等。
+   - C-h S SYMBOL *info-lookup-symbol* ：根据当前所处编程语言，描述
+     SYMBOL的含义。
+   - C-h . *display-local-help* ：如果光标在特殊文本区内，显示帮助信
+     息。？？？
+
+*** 阅读其它帮助文件（按字母顺序排序）
+	- C-h C-c *describe-copy* ：阅读Emacs版权信息。
+	- C-h C-d *view-emacs-debugging* ：阅读Debug Emacs的信息。
+	- C-h C-f *view-emacs-FAQ* ：阅读Emacs的FAQ。
+	- C-h g *describe-gnu-project* ：阅读GNU项目信息。
+	- C-h C-m *view-order-manuals* ：？？？
+	- C-h C-n *view-emacs-new* ：当前版本的新特性。
+	- C-h C-o *descrive-distribution* ：如何下载最新版本的Emacs和其它
+      GNU软件。
+	- C-h C-p *view-emacs-problems* ：显示已知的Emacs问题。
+	- C-h C-t *view-emacs-todo* ：Emacs着手添加的功能。
+	- C-h C-w *describe-no-warranty* ：？？？
 * 标记（mark）和区域（region）
 * 剪切（kill）和移动文本
 * 寄存器（registers）
