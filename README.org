@@ -373,7 +373,7 @@
   3. 查看FAQ。
   4. 同包关键字查找。
 
-  --
+  具体的命令为：
   - C-h a TOPIC *apropos-command* ：通过输入关键字，查找相应命令。可以
     是多个关键字。
   - C-h i d m emacs <RET> i TOPIC <RET>：查看Emacs Info手册中有TOPIC索
@@ -382,6 +382,7 @@
     本中有TOPIC的章节。
   - C-h C-f *view-emacs-FAQ* ：显示Emacs的FAQ页面。
   - C-h p *finder-by-keyword* ：通过关键字查找插件说明。
+
 ** 获取帮助命令概览（按字母顺序排序）
    - C-h a TOPIC *apropos-command* ：列出命令含TOPIC的命令。
 
@@ -463,6 +464,89 @@
 	- C-h C-t *view-emacs-todo* ：Emacs着手添加的功能。
 	- C-h C-w *describe-no-warranty* ：？？？
 * 标记（mark）和区域（region）
+  Emacs一些命令针对文本区域，要选中文本区域需首先mark一个端点，然后再
+  移动光标，光标与mark间的的区域即文本区域。
+
+  当mark一个点后，可认为文本被激活（activated）；当mark被激活后，也可
+  认为文本区域被激活，此时激活的文本区域会高亮。
+
+  当文本被激活后，除光标移动的命令外（如插入字符），文本区域激活会被取
+  消；也可使用C-g命令去激活（deactivation）手动去除。
+
+  mark只在当前buffer中有效，在不同buffer中来回移动时，回到原来buffer，
+  前面设置的mark依然存在。如果多个窗口显示的是统一buffer，每个窗口的光
+  标和选中区域独立,如需同时高亮,可设置变量
+  *highlight-noselected-window*。
+
+** 设置标记
+   - *set-mark-command* C-@或C-<SPAC>：设置mark并激活。
+
+	 /我的系统(kali)上C-<Shift>-<SPAC>才等价于C-<SPAC>。/
+
+   - *exchage-point-ant-mark* C-x C-x ：设置mark并激活，再将光标移动到
+     原来的mark上。
+
+   选中文本后，就可使用相应命令对其操作，如C-x C-u *upcase-region* 将
+   选中文本前部转换为大写。大多数对文本区域操作的命令结束后，都会自动
+   区激活mark。
+
+   mark还可用来记住位置，如在某点mark后再想回到该点，可使用C-u C-@命令。
+
+** 块标记
+   - *mark-word* M-@：标记单词。
+
+	 可跟参数N，表示单词数量，如果为负数，则向后标记。
+
+   - *mark-sexp* C-M-@：标记表达式。
+   - *mark-paragraph* M-h：标记所在段落。
+   - *mark-defun* C-M-h：标记defun。
+   - *mark-page* C-x C-p：标记整页。
+   - *mark-whole-buffer* C-x h：标记整个buffer。
+
+** 使用区域
+   对选中文本的操作可以有：
+   - *kill-region* C-w：剪切文本。
+   - *kill-ring-save* M-w：复制文本。
+   - *downcase-region* C-x C-l：转换为小写。
+   - *uppercase-region* C-x C-u：转换为大写。
+   - C-u C-/：返回文本块内的操作。
+   - *ispell-word* M-$：检查拼写。
+   - *eval-region* ：作为lisp代码运行。
+   - *copy-to-register* C-x r s：保存到寄存器。？？？
+   - 保存到另外的buffer或文件中。
+
+   其中一些命令在有选中文本和无选中文本时有区别，如M-$检查拼写，如果无
+   选中文本，默认是检查光标所在处单词。如果无选择文本（mark和point在同
+   一点）时，这些命令会使用默认操作，可通过设置变量
+   *use-empty-active-region* 改变此行为。
+
+** 存储标记的循环（mark ring）
+   每个打开的buffer都有一个mark ring来存储所有mark。
+
+   - C-<SPC> C-<SPC>：将当前位置mark，并push到mark ring中。
+
+	 此功能可用来记录不同位置，还不会高亮。第一个C-<SPC>相当于mark，第
+     二个则是deactivate。
+
+   - C-u C-<SPC>：在各个mark间跳转。
+
+	 如果当前mark处于激活状态，去激活。
+
+	 如果将变量 *set-mark-command-repeat-pop* 为nil值，在使用C-u
+     C-<SPC>循环到下一个mark后，可使用C-<SPC>再循环到下一个mark。
+
+   设置变量 *mark-ring-max* 可控制单个buffer中最大的mark数量，默认值为16。
+** 全局标记循序
+   当mark被添加到mark ring后，实际上同时也被添加到了变量
+   *global-mark-ring* 中。可使用命令 *pop-global-mark* C-x C-<SPC>命令
+   在不同buffer中来回移动。
+
+   可设置变量 *global-mark-ring-max* 控制全局mark数量，默认值为16。
+
+** 使用Shift键选中区域
+** 禁用高亮选中区域（diable Transient Mark）
+
+   还没遇到禁用的场景，暂时不管。
 * 剪切（kill）和移动文本
 * 寄存器（registers）
 * 显示控制
