@@ -548,6 +548,84 @@
 
    还没遇到禁用的场景，暂时不管。
 * 剪切（kill）和移动文本
+  Emacs中，"剪切"对应的单词为"kill"，“删除”对应的单词为“delete”，“粘贴”对
+  应的单词为"yank"。
+** 删除和剪切
+   绝大多数剪切命令都包含“kill”，这些命令会将剪切的内容放入变量
+   *kill-ring* 中，可用于粘贴。控制其最大数量的变量为 *kill-ring-max*
+   。如果剪切后返回，不会将剪切内容从 *kill-ring* 中移除。
+
+   删除文本的命令通常含"delete"，删除内容不会放入 *kill-ring* 中。
+*** 删除
+	- *delete-backward-char* <DEL>：删除前面一个单词，如果有文本选中则
+      删除选中文本。
+	- *delete-forward-char* <Delete>：删除后面一个单词，如果有选中文本
+      则删除选中文本。
+	- *delete-char* C-d：删除后面一个字符。
+	- *delete-horizontal-space* M-\：删除光标周围的空格和制表符。
+	- *just-one-space* M-<SPC>：将光标周围的空格和制表符删除至只留1个。
+	- *cycle-spacing* ：第一次执行相当于 *just-one-space* ，第二次执行
+      去除都有空白字符，第三次则还原原来的空白字符。
+	- *delete-blank-lines* C-x C-o：删除当前行周围的空行。
+	- *delete-indentation* M-^：合并行。 /将当前行与上一行合并。/
+	- *delete-duplicate-lines* ：删除选中文本区域的重复行。
+*** 剪切整行
+	- *kill-line* C-k：删除至行末。
+	  - 如果在行末执行，则合并当前行与下一行。
+	  - 如果有参数N为正数，则向后删除N行；如果为负数，则向前删除N行。
+
+		带参数时不留空行。
+
+	  - 如果变量 *kill-whole-line* 值为non-nil，删除行时一次删除，不流
+        空行。
+
+	- *kill-whole-line* C-S-BackSpace：删除整行，不管光标在该行何处，
+      且不留空行。
+
+	  /在命令行中，默认的快捷键一般无效。/
+*** 其它剪切命令
+	- *kill-region* C-w：剪切选中文本。
+	- *kill-ring-save* M-w：将选中文本push到 *kill-ring* 中。
+	- *kill-word* M-d：剪切下一个单词。
+	- *backward-kill-word* M-<DEL>：剪切上一个单词。
+	- *backward-kill-sentence* C-x <DEL>：向后删除至上一个句子。
+	- *kill-sentence* M-k：删除至句子末。
+	- *zap-to-char* M-z CHAR：删除至下一个字符CHAR。
+	- *kill-sexp* C-M-k：剪切平衡表达式。？？？
+*** 剪切配置
+
+	在只读文件中执行剪切操作时，会报错且发出警告声，不过实际上也会将剪
+	切内容push到 *kill-ring* 中。如需不发出警报声，可将变量
+	*kill-read-only-ok* 设置为non-nil。
+
+	如果将变量 *kill-do-not-save-duplicates* 设置为non-nil值，则不会记
+	录重复的剪切内容。
+** 粘贴
+   - *yank* C-y：粘贴上一个剪切的内容。
+*** 粘贴以往剪切的内容
+	- *yank-pop* M-y：在 *kill-ring* 中循环，替换上一个粘贴内容。
+
+	  上一条命令须为 *yank* 。原理为使指针指向 *kill-ring* 的不同项。
+      当下一次执行 *yank* 后，指针回到起点。一次循环后重头再来。
+*** 将多个剪切的内容粘贴到一起？？？
+** 图形界面的剪切和粘贴？？？
+** 其他向buffer添加文本的方法
+   - *appent-to-buffer* ：将选中文本添加到指定buffer后。
+
+	 添加到原来编辑后，光标最后停留的位置后。
+   - *append-to-file* ：将选中文本添加到指定file后。
+
+	 该文件会自动保存。
+   - *prepended-to-buffer* ：将选中文本添加到指定buffer前。
+   - *copy-to-buffer* ：将选中文本添加到指定buffer中，清空其原有内容。
+   - *insert-buffer* ：将buffer中所有内容插入到当前光标处。
+
+** 对“矩形”区域文本的操作
+   对编辑多列格式文本有用。（用到时再学此节）
+
+   选择方式：在“矩形”一角mark，再将光标移动到对角。
+** CUA快捷键绑定
+   使用 *cua-mode* 后可使用一些通常的按键方式，如C-c复制，C-v粘贴等。
 * 寄存器（registers）
 * 显示控制
 * 搜索和替换
