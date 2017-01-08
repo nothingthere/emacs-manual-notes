@@ -999,6 +999,9 @@
    - ?：查看帮助。
 
 * 按键宏
+  - *kmacro-start-macro-insert-counter* <f3>：开始录制。
+  - *kmacro-end-or-call* <f4>：定制录制。如果已经停止，则执行。
+
 * 文件操作 /Emacs的主要结构/
 * 使用多个buffer
 * 多窗口
@@ -1020,5 +1023,3 @@
 * 定制
 * 常见问题排查
 * 附录C：Emacs命令行启动参数
-
-  #  LocalWords:  edwedwe
