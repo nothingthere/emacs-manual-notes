@@ -952,6 +952,52 @@
 
 * 搜索和替换
 * 修改输入的命令
+** Undo
+   反悔undo的操作：undo后，执行不影响undo记录的命令（如C-f）在执行undo
+   即可。
+** 交换文本位置
+   - *transpose-chars* C-t：交换字符。
+   - *transpose-words* M-t：交换单词
+   - *transpose-sexps* C-M-t：交换平衡表达式。
+   - *transpose-lines* C-x C-t：交换行。
+** 改变大小写
+*** 针对文本区域
+	- *upcase-region* C-x C-u：大写。
+	- *downcase-region* C-x C-l：小写
+	- *capitalize-region* ：首字母大写。
+*** 针对单词
+	- *downcase-word* M-l：小写。
+	- *upcase-word* M-u：大写。
+	- *capitalize-word* M-c：首字母大写。
+** 拼写检查
+   - *ispell-word* M-$：检查当前单词。如果有文本高亮，检查文本区内的所
+     有单词。
+   - *ispell* ：检查整个buffer。如果有文本高亮，检查文本区内的所有单词。
+   - *ispell-buffer* ：检查整个buffer。
+   - *ispell-region* ：检查选中文本。
+   - *ispell-message* ：检查正在编写的邮件，不含引用内容。
+   - *ispell-change-directory* ：更换检查字典（UNIX系统自带）。
+   - *ispell-kill-ispell* ：杀死字典进程。
+   - *ispell-complete-word* <ESC> <TAB> ：根据字典补全。
+   - *flyspell-mode* ：启用即时检查功能。
+   - *flyspell-prog-mode* ：仅在注释和字符串中使用即时检查。
+
+   使用M-$命令后可进行的操作有：
+   - 数字：将当前的单词替换为数字对应的单词。
+   - <SPC> ：取消替换，保留错误提示。
+   - r NEW：直接替换。
+   - R NEW：直接替换，并可替换当前buffer中所有相同的错误单词。
+   - a：仅在当前"会话"中将其作为正确单词。
+   - A：仅在当前"buffer"中将其作为正确单词。
+   - i：将此单词作为正确单词，永久保存。
+   - m： 同i，不过可定制正确单词。
+   - u：将当前单词小写形式添加到字典中。
+   - l WORD：
+   - C-g 或 X：取消检查。
+   - x：取消检查，并将光标返回检查开始处。
+   - q：退出检查。
+   - ?：查看帮助。
+
 * 按键宏
 * 文件操作 /Emacs的主要结构/
 * 使用多个buffer
@@ -974,3 +1020,5 @@
 * 定制
 * 常见问题排查
 * 附录C：Emacs命令行启动参数
+
+  #  LocalWords:  edwedwe
