@@ -1003,11 +1003,147 @@
   - *kmacro-end-or-call* <f4>：定制录制。如果已经停止，则执行。
 
 * 文件操作 /Emacs的主要结构/
+** 如何编辑文件名
+   - *completion-ignored-extensions* ： 查找文件时会忽略的后缀。
+   - *default-directory* ：每打开一个文件时，都会为当前buffer生成这个
+     本地变量，即当前buffer对应文件所处的文件夹。
+   - *pwd* ：查看 *default-directory* 变量的值。
+   - *cd* ：改变变量 *default-directory* 的值。
+
+   文件名中有"$"时，如果shell中export了对应的变量，将解释为该变量值，
+   否则为其本身。
+
+** 访问文件
+   - *find-file* C-x C-f：打开文件。
+   - *find-file-read-only* C-x C-r：打开文件，只是阅读，不允许修改。
+   - *find-alternate-file* C-x C-v：？？？
+   - *find-file-other-window* C-x 4 f：在另外一个窗口中打开文件。
+   - *find-file-other-frame* C-x 5 f：在另外一个frame中打开文件。
+   - *find-file-literally* ：？？？
+
+   打开文件后，状态栏中显示的buffer名通常与文件名相同。如果已存在相同
+   的buffer名，每个buffer名后面会显示上层文件夹，以区别。
+
+   如果输入的文件名为文件夹，会进入dired模式，如需禁用此功能可设置变量
+   *find-file-run-dired* 为nil。
+
+   如果访问的文件为“自读”文件，可使用C-x C-q进行编辑。
+
+** 保存buffer到文件
+*** 保存命令
+	- *save-buffer* C-x C-s：保存当前文件。
+	- *save-some-buffers* C-x s：保存所有未保存的文件。
+	- *not-modified* M-~：忽略修改过的内容，当做修改；如果带参数，即使
+      没修改过也当修改过。
+	- *write-file* C-x C-w：另存为。
+	- *set-visited-file-name* ：修改当前buffer对应的文件名。
+
+*** 备份
+	- *make-backup-files* ：设置是否自动生成备份文件。
+	- *vc-make-backup-files* ：是否生成版本管理的备份文件。
+**** 备份文件命名
+	 备份文件通常由"~"结尾。
+
+	 - *version-control* ：是否生成多个备份文件。可取值为：
+	   1. nil：如果有多个备份，每个都备份，否则只有一个备份。
+	   2. t：生成多个备份。
+	   3. never：总是只有一个备份。
+	 - *backup-directory-alist* ：指定哪些文件夹中的文件需备份。
+**** 删除备份文件
+	 如果有多个备份，新备份生成时会自动删除一些，保留几个最新和最旧的
+	 备份。
+
+	 - *kept-old-versions* ：最旧备份的保存数量。
+	 - *kept-new-versions* ：最新备份的保存数量。
+
+**** 复制备份文件
+*** 定制文件保存
+	- *require-final-newline* ：保存时是否在buffer末没有换行符时添加一
+      个可取值为：
+	  1. visit：只有访问后的才添加。
+	  2. visit-save：访问后和保存时都添加。
+	  3. nil：不添加。
+*** 如何确保2个用户不同时编辑一个文件
+*** shadow
+*** 时间戳
+** 忽略未保存的修改
+** 自动忽略非文件buffer
+** 自动保存
+** 文件别名
+** 添加、删除和列出文件夹
+** 文件内容比较
+** 其他文件操作
+** 访问压缩文件
+** 远程文件操作
+** 文件名中的特殊字符
+** 缓存文件名
+** 查找文件的快捷方式
+** 成组操作文件
 * 使用多个buffer
 * 多窗口
+** 窗口介绍
+** 分屏
+ - *split-window-below* C-x 2：上下分屏。
+
+   默认情况下分屏后两个窗口高度相等，可使用前置参数N改变大小，如果为正
+   数 表示新窗口多占的行，负数表示新窗口少占的行。
+
+ - *split-window-right* C-x 3：左右分屏。
+
+   默认情况下分屏后两个窗口宽度相等，可使用前置参数N改变大小，如果为正
+   数 表示新窗口多占的列，负数表示新窗口少占的列。
+** 跳转
+   - *other-window* C-x 0：跳转到另一个窗口。
+
+	 跳转顺序为：上 -> 下，左 -> 右边。
+
+	 前置参数N表示跳转步数，负数表示反方向跳转。
+
+   - *scroll-other-window* C-M-v：向上滚动下一个窗口。
+
+	 如果带前置参数N，则效果相当于在另一个窗口执行C-v命令。
+
+** 在另一个窗口打开文件或buffer
+** 删除和改变窗口大小
+   - *delete-window* C-x 0：删除当前窗口。
+   - *kill-buffer-and-window* C-x 4 0：删除当前窗口，并删除当前buffer。
+   - *delete-other-windows* C-x 1：只保留当前窗口。
+   - *enlarge-window* C-x ^：将当前窗口变高。
+
+	 前置参数N表示行数。如果操作结果小于变量 *window-min-height* 会报
+     错。
+
+   - *enlarge-window-horizontally* C-x }：将当前窗口变宽。
+   - *shrink-window-horizontally* C-x {：将当前窗口变窄。
+
+	 前置参数N表示列数。如果操作结果小于变量 *window-min-width* 会保存。
+
+   - *shrink-window-if-larger-than-buffer* C-x -：如果当前buffer中的行
+     数不多，不需要当前窗口的高度，将其变矮。
+   - *balance-window* C-x +：将所有窗口变得一样高。
+
+** 显示buffer
+** 窗口操作的快捷方式
 * Frams和图形显示
 * 字符设置国际化
 * Major和Minor模式 /高级特性/
+** 主模式
+   主模式大致可分为3类：
+   1. 包含常规文本或标记语言，含HTML mode、SGML mode、Tex mode和
+      Outline mode。
+   2. 针对编程语言，如C mode等。
+   3. 不针对文件，而是一些特殊的buffer，如Dired mode。
+
+   除fundamental-mode外，每一个主模式都对应有一个hook（“钩子”），即一个由函数
+   构成的链表，当该模式加载后“钩子”内的函数顺序执行。最常用法是为主模
+   式添加副模式：
+
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'text-mode-hook 'flyspell-mode)
+     (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+   #+END_SRC
+** 副模式
+** 模式选择
 * 缩进
 * 非编程文本相关命令
 * 程序编辑
