@@ -1,0 +1,1161 @@
+#+TITLE: 《Emacs Manual》学习笔记
+* 显示界面组织 /重要的基本常识/
+  /frame/ ：整个Emacs占据的图像窗口，或terminal屏幕。
+** point
+   *光标实际所在位置为，所处字符前。*
+** echo区域
+   | C-x = | 显示光标所在处字符的信息 |
+
+   echo区域显示提示信息和警告等信息。通常显示速度很快，如需查看，都在
+   *Message*中。
+
+   *Message*buffer中可见信息条数，可通过变量message-log-max变量控制。
+** 模式行
+   模式行位于echo区域上方，其中的字符格式为：
+
+   cs:ch-fr buf pos line (major minor)
+
+   各部分字符的含义为：
+   - cs: 由4个字符组成：
+	 1. codeing system，字符系统。'-'表示无特殊字符处理，'='表示no
+        conversion?，'1'表示ISO Latin-1。
+	 2. 键盘输入字符系统。
+	 3. 命令行输出字符系统。
+	 4.
+   - ch：'--'表示buffer内容与磁盘文件内容一致，'\*\*'表示文件未保存，'%%'表
+     示未修改过的自读文件，'%\*'表示未保存的自读文件。
+   - ch后的字符：一般为'-'，如果当前buffer为远程文件内容，以'@'标记。
+   - fr：Frame的名称，起始frame以'F1'表示。
+   - pos：当前行在整个buffer中的位置。
+   - line：当前行数。可通过column-number-mode函数实现显示当前列数。
+   - major minor：当前的major模式。只有1个; minor：当前的minor模式，
+     可有多个。
+	 一些与模式(mode)不相关的内容有时也会出现在此括号内，如'Narrowed'表
+     示只显示部分buffer文本。当使用处于递归编辑状态时，外层还会包裹方
+     括号。
+** 菜单栏
+   在命令行环境中，可通过ttm-menubar打开菜单。
+* 字符、按键和命令
+** 可输入的内容
+   Emacs将键盘上的字符分为3类：
+   1. 直接输入类，如'a' 'b' '3'等。
+   2. 控制字符，如RET TAB DEL ESC F1 Home等。
+   3. 修饰字符Ctrl和Meta，用来执行命令。
+
+   图形界面上通过鼠标实现的行为，成为 /输入事件/ 。
+
+** 组合键
+   组合键分为 /前缀键/ 如C-c和C-x, /完整键/ 如C-f和C-g。组合键要么是前
+   缀键，要么是完整键。
+
+   常用的前缀键有：C-c, C-h, C-x, C-x RET, C-x @, C-x a, C-x n, C-x r,
+   C-x v, C-x 4, C-x 5, C-x 6, ESC, M-g和M-o。
+** 按键和命令
+   每个有效快捷键都对应一个命令，即elisp函数。
+* 进入和退出Emacs
+** 进入Emacs
+   将变量 *inhibit-startup-screen* 设置为non-*nil* 值，可禁用初次进入Emacs时
+   的说明页面。
+
+   通过设置 *initial-buffer-choice* 变量，可指定启动Emacs时默认打开的文件/
+   文件夹。
+
+** 退出Emacs
+   | C-x C-c | (*save-buffers-kill-terminal*)，退出emacs |
+   | C-z     | (*suspend-emacs*)，最小化emacs            |
+
+   将 *confirm-kill-emacs* （默认为nil）设置为判断函数，可实现退出emacs前再次确认，
+   如 *yes-or-no-p* 。
+
+   如果直接退出Emacs，可执行命令 *kill-emacs*。
+
+* 基本编辑命令 /基础编辑命令/
+** 文本插入
+   使用 *auto-fill-mode* 可将过长的行自动换行。行数由变量
+   *fill-column* 变量控制。
+*** 输入特殊字符
+   	使用 *quote-insert* (C-q)可输入特殊字符，如C-c。
+
+	不仅可通过特殊键输入，还可使用字母编码数字输入，如“C-q 1 0 1 B”的
+	输入结果为"AB"；编码 的进制可通过 *read-quoted-char-radix* 变量控
+	制。
+
+	还可使用 *insert-char* (C-x 8 RET) 选择输入特殊字符。如：
+
+	C-x 8 <RET> infinity <RET>
+
+	C-x 8 <RET> 221e <RET>
+** 改变光标位置
+   | C-f              | *forward-chae*                   | 向前移动一个字符                   |
+   | <RIGHT>          | *right-char*                     | 同上，不过在右->左语言环境下有区别 |
+   | C-b              | *backward-char*                  | 向右移动一个字符                   |
+   | <LEFT>           | *left-char*                      | 同上，不过在右->左语言环境下有区别 |
+   | C-n <DOWN>       | *next-line*                      | 下一行，列数不变                   |
+   | C-p <UP>         | *previous-line*                  | 上一行，列数不变                   |
+   | C-a <Home>       | *move-beginning-of-line*         | 移至行首                           |
+   | C-e <End>        | *move-end-of-line*               | 移至行尾                           |
+   | M-r              | *move-to-window-line-top-bottom* | 在窗口的上中下3个位置移动          |
+   | M-<              | *beginning-of-buffer*            | 移至buffer最前                     |
+   | M->              | *end-of-buffer*                  | 移至buffer最后                     |
+   | C-v              | *scroll-up-command*              | 向下翻页                           |
+   | M-v              | *scroll-down-command*            | 向上翻页                           |
+   | M-g c            | *goto-char*                      | 移至buffer的第N个字符处            |
+   | M-g g 或 M-g M-g | *goto-line*                      | 移至第N行                          |
+   | M-g <TAB>        | *move-to-column*                 | 移至当前行的第N列                  |
+   | C-x C-n          | *set-goal-column*                | 设置以后移上下移动时，都在当前列   |
+   | C-u C-x C-n      |                                  | 取消C-x C-n设置的全局列数          |
+
+   光标移动时有 /逻辑行/ 和 /可见行/ 的区别。C-p和C-n命令默认使用 /可
+   见行/，如需使用 /逻辑行/ ，需设置 *line-move-visual* 值为nil。
+
+   当C-n命令移至最后一行后，再执行该命令就无作用。如果将变量
+   *next-line-add-newlines* 设置为non-line，可添加新行。
+
+** 文本剪切
+   | <BACKSPACE> | *delete-backward-char* | 删除前面一个字符                         |
+   | <Delete>    | *delete-forward-char*  | 删除后面一个字符。如果有选中区域，则删除 |
+   | C-d         | *delete-char*          | 删除后面一个字符，不管有无选中区域。     |
+   | C-k         | *kill-line*            | 剪切至行末                               |
+   | M-d         | *kill-word*            | 剪切后面一个单词                         |
+   | M-<DEL>     | *backward-kill-word*   | 剪切至前面一个单词                       |
+
+** Undo（返回）
+   C-/、C-x u和C-_ 等价。
+** 文件操作
+   | C-x C-f | *open-file*   | 打开文件   |
+   | C-x C-s | *save-buffer* | 保存buffer |
+
+** 获取帮助
+   获取帮助的快捷键都以C-h开头，如C-h k *describe-key*，获取快捷键
+   帮助。
+
+** 空白行
+   - C-o *open-line* ：插入新行，光标位置保持不变。
+   - C-x C-o *delete-blank-lines* ：删除空行：
+	 - 如果有多个空行，仅保留1个。
+	 - 如果只有1个空行，将其删除。
+	 - 如果当前不是空行，删除后面的所有空行。
+
+** 逻辑行延续
+   如果某行过长不能完全显示，Emacs会在末尾使用'\'表示为逻辑换行。如果
+   不逻辑换行，只在单行显示，就在末尾使用'$'标记。
+
+   对行的操作命令除C-p和C-n外，都默认针对逻辑行，而非显示行。
+** 光标所在处信息
+   - *what-line* ：显示当前行数。
+
+	 虽然状态栏也会显示当前行数，但此命令会提示buffer是否被Narrowed。
+   - *line-number-mode* 和 *column-number-mode* ：显示/关闭状态栏的行
+     数和列数。
+   - *cound-words-region* M-=：显示选中区域的行数、单词数和字符数。
+
+	 如果带参数执行此命令，即C-u M-=，则针对整个buffer。
+   - *count-words* ：显示整个buffer的行数、单词数和字符数。如果有选中
+     文本，则相当于 *count-words-region* 。
+   - *what-cursor-position* C-x =：显示光标后面一个字符的位置和列数。
+
+	 显示格式为：
+	 Char: c (99, #o143, #x63) point=28062 of 36168 (78%) column=53
+
+	 其含义为：
+	 Char: 字符 (10进制, 8进制, 16进制) point=buffer中的位置 of 整个
+	 buffer的字符数 (以百分比占的位置) column=列数。
+
+	 如果整个buffer被Narrowed，会有额外信息：<Narrowed后的位置，Widden后的
+     位置>。
+   - *hl-line-mode* ：高亮/不高亮显示当前行。
+   - *size-indication-mode* ：显示/不显示当前buffer的大小。
+
+** 数字参数
+   传递数字参数最简单的方式是使用<Meta>键，如M-5 C-n为向下移动5行。
+
+   如果参数是负数，则使用M--，不传数字是 /一般/ 默认为-1。
+
+   M-5 0 C-n不是先插入5个0，再向下移动一行，实际的作用时向下移动50行。
+   M-5 C-u 0，才是插入5个0，此处C-u的作用为取消前面的数字参数。
+
+   - *universal-argument* C-u：也可传递数字参数，不跟数字的负号默认为-1。
+
+	 还有一项功能就是将后面的命令重复4次。如C-u C-n为向下移动4行，C-u
+     C-u C-n为向下移动16行。
+
+	 如果要重复输入插入字符，可跟数字参数，如C-u 6 0 a为输入60个a；如
+     果要重复输入60个0，则为C-u 6 0 C-u 0。
+
+	 一些命令需要有参数，单会忽略参数值如M-q *fill-paragraph* 。
+
+	 一些命令将数字参数作为重复次数，单没有参数时则效果不同。如C-k
+     *kill-line* ，带数字参数时删除行时，会顺带删除后面的换行符，即不
+     留空行。
+
+** 重复命令
+   如“M-x COMMAND-NAME <RET>”这类命令，可通过C-u传入参数指定重复次数，
+   但如果这些命令需输入内容，此方法就不能生效。
+
+   这时需用C-x z *repeat* 命令重复，如需传入参数，默认使用上一条命令的
+   参数。
+
+   如使用了命令C-u 2 0 C-d删除了20个字符，这时再使用C-x z z z就可删除
+   后面60个字符。
+* minibuffer
+  minibuffer的作用是输入复杂命令，如文件名、buffer名、命令名称或Lisp表
+  达式。
+** 基本使用方法
+   使用'minibuffer-prompt'高亮。
+
+   <RET>提交输入，C-g取消输入。
+
+   *minibuffer-electric-mode* 还没理解？？？
+
+   由于minibuffer与echo区域公用一个窗口，当输入内容时，如果有报错或提
+   示信息，将立即显示，只有继续输入时才是再次启动minibuffer。
+** 输入文件名
+   使用C-x C-f *find-file* 打开文件时，输入文件名有一下快捷方式：
+   - “..” 代表上一级文件夹。如"a/b/../foo.el"的实际含义为"a/foo.el"。
+   - “/” 表示忽略前面的所有内容。如"/a/b//etc/termcap"的实际含义为
+     "/etc/termcap"。
+
+	 可使用 *file-name-shadow-mode* 打开/关闭此项功能。
+   - "~" 表示home目录，如“~/emma.txt”。所有"~"之前的内容会被忽略。
+   - 可使用C-a C-k删除所有默认文件路径。
+
+   将变量 *insert-default-directory* 设置为nil时，提示输入文件名时不会
+   有默认内容，不过相对当前文件的路径依然有效。
+** 在其中编辑
+   由于在minibuffer中<RET>表示提交，要输入新行，需使用C-q C-j或C-o
+   *open-line*。
+
+   minibuffer，可同普通窗口一样使用编辑命令。如使用C-a C-k删除行；还可
+   与普通编辑窗口间来回跳转，相互剪切/粘贴文本等。不过也有限制，不如不
+   可分屏。
+
+   *resize-mini-windows* 变量可控制minibuffer的大小变化，取值可为：
+   - grow-only：当添加新行时，自动变高。
+   - t：当减少行后，还会变矮。
+   - nil：一直不改变高度。
+
+   *max-mini-window-height* 变量可控制minibuffer高矮变化时的最大高度：
+   - 浮点数：表示占整个窗口的百分比。
+   - 整数：表示行数。
+   - nil：不自动改变高度。
+
+   可使用C-M v *scroll-other-window* 命令向下滚动“另一个”窗口。
+** 补全
+*** 例子
+	使用补全方式输入"M-x auto-fill-mode <RET>"的方式为：
+
+	"M-x a u <TAB> - f <TAB>"。
+*** 命令
+	- *minibuffer-complete* <TAB>：尽量补全，如不能补全则列出备选。
+	- *minibuffer-complete-word* <SPC>：补全光标处的单词，对有空格的参
+      数无效，如文件名。
+	- *minibuffer-complete-and-exit* <RET>：提交命令，可能在提交前补全。
+	- *minibuffer-complete-help* ?：列出所有备选。
+	- *switch-to-completion* M-v：跳转到备选窗口。在此窗口中的操作有：
+	  1. *choose-completion* <RET>：选中。
+	  2. *next-completion* <RIGHT>：下一条。
+	  3. *previous-completion* <LEFT>：上一条。
+*** 退出
+	使用 *minibuffer-complete-and-exit* 命令提交命令时，可能有以下4种
+	行为：
+	- "strict completion"：只接受匹配补全的命令，即存在的命令或立即补
+      全后存在的命令。如果不匹配，则保留在minibuffer内，显示提示信息，
+      此时可使用C-g退出。
+
+	  比如输入“M-x”后直接回车。
+
+	- "cautious completion"：同上一类型相同，唯一的区别是当可立即补全
+      时，仅补全，不提交命令，需手动使用<RET>提交。
+
+	  比如只读取已存在的文件名。
+
+	- “permissive completion”：允许各种输入，备选列表只做建议。输入
+      <RET>不补全，仅提交。
+
+	- "permissive completion with confirmation"：??
+
+	可通过设置 *confirm-noexistence-file-or-buffer* 改变确认（confirm）
+	行为：
+	- 默认值为after-completion，即上面的行为。
+	- nil，不提示确认，即"permissive completion"。
+	- 其它non-nil值，询问上一条命令是否为<TAB>。？？？
+
+*** 如何选择补全备选
+	Emacs通过变量 *completion-styles* 中的类型依次选择备选，如果前一种
+	不能获取备选尝试后一种，直到找到为止。备选类型依次有：
+	- basic：匹配与光标前完全相同的的内容。如果光标后有文本，将其作为
+      补全后的子字符串。
+	- partial-completion：将空格或'-'隔开的单词分别补全。如将"em-l-m"
+      补全为"emacs-lisp-mode"。
+
+	  此外将"*"作为通配符，匹配任意字符。
+	- emacs22：同“basic”方式相同，只是会忽略光标后的文本。
+
+	下面还有2种方式，可将其添加到 *completion-styles* 中:
+	- substring：备选需匹配光标前的文本加光标后的文本。比如minibuffer
+      中只有文本"foobar"，且光标在"foo"与"bar"之间，备选可为
+      "AfooBbarC"，其中A、B、C可为任意文本（空字符串也可）。
+	- initials：如将"lch"匹配为"list-command-history"。
+
+	可通过设置 *completion-category-overrides* 实现在不同环境中使用不
+	同补全方式。
+*** 配置
+	- 大小写：补全会区分大小写，如"AU"不会出现"auto-fill-mode"的备选。
+
+	  - *read-file-name-completion-ignore-case* ：设置读取文件名时是否
+        区分大小写。在文件系统区分大小写的系统中默认为nil，如Unix；在
+        文件系统不区分大小写的系统中默认为non-nil，如Windows。
+
+	  - *read-buffer-completion-ignore-case* ：同上，不过针对的是buffer
+        名称。
+	- 忽略文件：通过设置变量 *completion-ignored-extensions* 变量来过
+      滤文件名。文件后缀名在此链表变量中的文件会被忽略。
+
+	  当所有备选文件都被忽略时，就都不忽略。
+
+	  当列出备选时，Emacs会忽略此变量。
+	- *completion-auto-help* ：当设置为nil时，只有输入"?"时才列出备选。
+      当设置为'lazy时，只有第2此使用<TAB>时才列出备选。
+	- *completion-cycle-threshold* ：当设置为non-nil时，使用<TAB>时逐
+      个循环最匹配补全。如果为数字N时，仅在只有<=N个备选时才循环。
+** 历史命令
+   - *previous-history-element* M-p：上一条历史命令。
+   - *next-history-element* M-n：下一条历史命令。
+   - *previous-match-history* M-r REGEXP：满足REGEXP的上一条历史命令。
+   - *next-match-history* M-s REGEXP：满足REGEXP的下一条历史命令。
+
+   - *history-length* ：历史命令存储的最大个数，如果为t表示无上限。
+   - *history-delete-duplicates* ：是否删除重复历史命令中重复的条目，
+     如果为non-nil，删除原有命令中与当前命令相同的条目。
+** 重复执行命令
+   每条用“M-x”形式执行的命令都存储在 *command-history* 变量中。
+   - *repeat-complex-command* C-x <ESC> <ESC>：重复执行上条使用"M-x"执
+     行的命令。
+
+	 使用此命令后对应的lisp表达式会显示在minibuffer内，可直接使用<RET>
+     执行，也可编辑后执行。
+
+	 可使用M-p和M-n在历史命令中选择。
+
+	 可将变量 *isearch-resume-in-command-history* 设置为non-nil值，实
+     现反向搜索。
+   - *list-command-history* ：列出所有变量 *command-history* 中保存的
+     命令。
+** 密码
+   当需输入密码时（如打开远程文件），输入的内容会显示为“.”，且不会记录
+   输入密码这条历史命令。除下列编辑命令外，minibuffer中的任何编辑命令
+   都不可用：
+   - <DEL>：删除字符
+   - C-u：清空已输入的密码
+   - C-g：放弃
+   - C-y：粘贴
+   - <ECS>或<RET>：提交密码
+** yes-or-no提示
+   对需确认的操作，Emacs会提示是否执行，在minibuffer中显示"yes-or-no"
+   字样。如文件另存为命令C-x C-w *write-file* 。
+
+   由于也是在minibuffer中，所以所有minibuffer相关的命令都可用，如C-v和
+   M-v翻页，M-p和M-n选择等。
+* 使用函数名执行命令
+  每一个Emacs命令都有一个名字，即函数名，除绑定快捷键的命令外，都只能
+  使用命令M-x *execute-extended-command* 命令执行。
+
+  如需不提示命令对应的快捷键，可将变量 *suggest-key-bindings* 设置为nil。
+* Help
+  如果想查找Emacs的某种特性，还不直到它叫什么和哪里去找，一般的查找顺
+  序为：
+  1. 尝试apropos-command命令。
+  2. 查看手册索引。
+  3. 查看FAQ。
+  4. 同包关键字查找。
+
+  具体的命令为：
+  - C-h a TOPIC *apropos-command* ：通过输入关键字，查找相应命令。可以
+    是多个关键字。
+  - C-h i d m emacs <RET> i TOPIC <RET>：查看Emacs Info手册中有TOPIC索
+    引的条目，使用','查看下一条匹配结果。
+  - C-h i d m emacs <RET> s TOPIC <RET>：同上一个命令相同，不过匹配文
+    本中有TOPIC的章节。
+  - C-h C-f *view-emacs-FAQ* ：显示Emacs的FAQ页面。
+  - C-h p *finder-by-keyword* ：通过关键字查找插件说明。
+
+** 获取帮助命令概览（按字母顺序排序）
+   - C-h a TOPIC *apropos-command* ：列出命令含TOPIC的命令。
+
+	 如果是多个关键字，结果会至少满足2个其中的关键字。也可使用正则表达
+     式。通常使用的关键字如下：
+
+	 char, line, word, sentence, paragraph, region, page, sexp, list,
+     defun, rect, buffer, frame, window, face, file, dir, register,
+     mode, beginning, end, forward, backward, next, previous, up, down,
+     search, goto, kill, delete, mark, insert, yank, fill, indent, case,
+     change, set, what, list, find, view, describe, default.
+
+	 如果变量 *apropos-do-all* 值为non-nil，结果会更多，不过搜索速度也
+     相应变慢。
+
+	 除 *apropos-documentation* 命令外，所有apropos命令执行结果都按字
+     母顺序排序，如果需按相关度排序，需将变量 *apropos-sort-by-scores*
+     设置为non-nil。 *apropos-documentation* 执行结果默认按相关度排序，
+     如需按字母顺序排序，可设置 *apropos-documentation-sort-by-scores*
+     设置为nil。
+
+   - C-h b *describe-bindings* ：列出所有有效快捷键，排序顺序为
+     minor-mode -> major-mode -> 全局绑定。
+   - C-h c KEY *describe-key-briefly* ：简单描述快捷键KEY，如需更详细
+     信息，可使用C-h k快捷键。
+   - C-h d TOPIC *apropos-documentation* ：描述文档内有TOPIC的函数和变
+     量。
+   - C-h e *view-echo-area-message* ：显示*Message*buffer。
+   - C-h f FUNCTION *describe-function* ：描述函数。
+   - C-h h *view-hello-file* ：显示"HELLO"文件，查看语言支持。
+   - C-h i *info* ：运行Info程序，查看内置文档。
+
+	 如需打开两个Info程序，需在C-h i前添加数字参数。
+
+   - C-h k *describe-key* KEY：查看快捷键KEY对应命令的文档。
+   - C-h l *view-lossage* ：查看前最近300个按键输入。
+
+	 当误输入一些命令，导致Emacs崩溃后，可通过此命令查看输入过的所有内
+     容。
+
+   - C-h m *describe-mode* ：描述当前mode。
+   - C-h n *view-emacs-new* ：查看当前版本的Emacs改进。
+   - C-h p *finder-by-keyword* ：按类型列出插件。
+   - C-h P PACKAGE *describe-package* ：显示PACKAGE的文档。
+   - C-h r *info-emacs-manual* ：阅读Emacs内置手册。
+   - C-h s *describe-syntax* ：显示当前“语言表（syntax table）”。即哪
+     个字符为分隔符，哪个字符为单词的一部分等。？？？
+   - C-h t *help-with-tutorial* ：进入Emacs的内置交互式入门教程。
+   - C-h v VAR *describe-variable* ：显示变量VAR的文档。
+   - C-h w COMMAND *where-is* ：显示哪个快捷键可执行命令COMMAND。
+
+	 C-h c为显示快捷键的简略信息，C-h k为显示快捷键对应函数的文档，C-h
+     K为进入Info中有关快捷键的节点，而C-h w为列出与命令相关的快捷键。
+
+   - C-h C *describe-codeing-system* ：查看“Coding system（编码系
+     统）”。？？？
+   - C-h F COMMAND *Info-goto-emacs-command-node* ：进入Info中关于
+     COMMAND的节点中。
+   - C-h I METHOD *describe-input-method* ：描述输入法。
+   - C-h K KEY *Info-goto-emacs-key-command-node* ：进入Info中关于快捷
+     键KEY的节点。
+   - C-h L LANGUAGE-ENV *describe-language-enviroment* ：描述
+     LANGUAGE-ENV的编码系统和输入法等。
+   - C-h S SYMBOL *info-lookup-symbol* ：根据当前所处编程语言，描述
+     SYMBOL的含义。
+   - C-h . *display-local-help* ：如果光标在特殊文本区内，显示帮助信
+     息。？？？
+
+*** 阅读其它帮助文件（按字母顺序排序）
+	- C-h C-c *describe-copy* ：阅读Emacs版权信息。
+	- C-h C-d *view-emacs-debugging* ：阅读Debug Emacs的信息。
+	- C-h C-f *view-emacs-FAQ* ：阅读Emacs的FAQ。
+	- C-h g *describe-gnu-project* ：阅读GNU项目信息。
+	- C-h C-m *view-order-manuals* ：？？？
+	- C-h C-n *view-emacs-new* ：当前版本的新特性。
+	- C-h C-o *descrive-distribution* ：如何下载最新版本的Emacs和其它
+      GNU软件。
+	- C-h C-p *view-emacs-problems* ：显示已知的Emacs问题。
+	- C-h C-t *view-emacs-todo* ：Emacs着手添加的功能。
+	- C-h C-w *describe-no-warranty* ：？？？
+* 标记（mark）和区域（region） /重要的文本修改命令/
+  Emacs一些命令针对文本区域，要选中文本区域需首先mark一个端点，然后再
+  移动光标，光标与mark间的的区域即文本区域。
+
+  当mark一个点后，可认为文本被激活（activated）；当mark被激活后，也可
+  认为文本区域被激活，此时激活的文本区域会高亮。
+
+  当文本被激活后，除光标移动的命令外（如插入字符），文本区域激活会被取
+  消；也可使用C-g命令去激活（deactivation）手动去除。
+
+  mark只在当前buffer中有效，在不同buffer中来回移动时，回到原来buffer，
+  前面设置的mark依然存在。如果多个窗口显示的是统一buffer，每个窗口的光
+  标和选中区域独立,如需同时高亮,可设置变量
+  *highlight-noselected-window*。
+
+** 设置标记
+   - *set-mark-command* C-@或C-<SPAC>：设置mark并激活。
+
+	 /我的系统(kali)上C-<Shift>-<SPAC>才等价于C-<SPAC>。/
+
+   - *exchage-point-ant-mark* C-x C-x ：设置mark并激活，再将光标移动到
+     原来的mark上。
+
+   选中文本后，就可使用相应命令对其操作，如C-x C-u *upcase-region* 将
+   选中文本前部转换为大写。大多数对文本区域操作的命令结束后，都会自动
+   区激活mark。
+
+   mark还可用来记住位置，如在某点mark后再想回到该点，可使用C-u C-@命令。
+
+** 块标记
+   - *mark-word* M-@：标记单词。
+
+	 可跟参数N，表示单词数量，如果为负数，则向后标记。
+
+   - *mark-sexp* C-M-@：标记表达式。
+   - *mark-paragraph* M-h：标记所在段落。
+   - *mark-defun* C-M-h：标记defun。
+   - *mark-page* C-x C-p：标记整页。
+   - *mark-whole-buffer* C-x h：标记整个buffer。
+
+** 使用区域
+   对选中文本的操作可以有：
+   - *kill-region* C-w：剪切文本。
+   - *kill-ring-save* M-w：复制文本。
+   - *downcase-region* C-x C-l：转换为小写。
+   - *uppercase-region* C-x C-u：转换为大写。
+   - C-u C-/：返回文本块内的操作。
+   - *ispell-word* M-$：检查拼写。
+   - *eval-region* ：作为lisp代码运行。
+   - *copy-to-register* C-x r s：保存到寄存器。？？？
+   - 保存到另外的buffer或文件中。
+
+   其中一些命令在有选中文本和无选中文本时有区别，如M-$检查拼写，如果无
+   选中文本，默认是检查光标所在处单词。如果无选择文本（mark和point在同
+   一点）时，这些命令会使用默认操作，可通过设置变量
+   *use-empty-active-region* 改变此行为。
+
+** 存储标记的循环（mark ring）
+   每个打开的buffer都有一个mark ring来存储所有mark。
+
+   - C-<SPC> C-<SPC>：将当前位置mark，并push到mark ring中。
+
+	 此功能可用来记录不同位置，还不会高亮。第一个C-<SPC>相当于mark，第
+     二个则是deactivate。
+
+   - C-u C-<SPC>：在各个mark间跳转。
+
+	 如果当前mark处于激活状态，去激活。
+
+	 如果将变量 *set-mark-command-repeat-pop* 为nil值，在使用C-u
+     C-<SPC>循环到下一个mark后，可使用C-<SPC>再循环到下一个mark。
+
+   设置变量 *mark-ring-max* 可控制单个buffer中最大的mark数量，默认值为16。
+** 全局标记循序
+   当mark被添加到mark ring后，实际上同时也被添加到了变量
+   *global-mark-ring* 中。可使用命令 *pop-global-mark* C-x C-<SPC>命令
+   在不同buffer中来回移动。
+
+   可设置变量 *global-mark-ring-max* 控制全局mark数量，默认值为16。
+
+** 使用Shift键选中区域
+** 禁用高亮选中区域（diable Transient Mark）
+
+   还没遇到禁用的场景，暂时不管。
+* 剪切（kill）和移动文本
+  Emacs中，"剪切"对应的单词为"kill"，“删除”对应的单词为“delete”，“粘贴”对
+  应的单词为"yank"。
+** 删除和剪切
+   绝大多数剪切命令都包含“kill”，这些命令会将剪切的内容放入变量
+   *kill-ring* 中，可用于粘贴。控制其最大数量的变量为 *kill-ring-max*
+   。如果剪切后返回，不会将剪切内容从 *kill-ring* 中移除。
+
+   删除文本的命令通常含"delete"，删除内容不会放入 *kill-ring* 中。
+*** 删除
+	- *delete-backward-char* <DEL>：删除前面一个单词，如果有文本选中则
+      删除选中文本。
+	- *delete-forward-char* <Delete>：删除后面一个单词，如果有选中文本
+      则删除选中文本。
+	- *delete-char* C-d：删除后面一个字符。
+	- *delete-horizontal-space* M-\：删除光标周围的空格和制表符。
+	- *just-one-space* M-<SPC>：将光标周围的空格和制表符删除至只留1个。
+	- *cycle-spacing* ：第一次执行相当于 *just-one-space* ，第二次执行
+      去除都有空白字符，第三次则还原原来的空白字符。
+	- *delete-blank-lines* C-x C-o：删除当前行周围的空行。
+	- *delete-indentation* M-^：合并行。 /将当前行与上一行合并。/
+	- *delete-duplicate-lines* ：删除选中文本区域的重复行。
+*** 剪切整行
+	- *kill-line* C-k：删除至行末。
+	  - 如果在行末执行，则合并当前行与下一行。
+	  - 如果有参数N为正数，则向后删除N行；如果为负数，则向前删除N行。
+
+		带参数时不留空行。
+
+	  - 如果变量 *kill-whole-line* 值为non-nil，删除行时一次删除，不流
+        空行。
+
+	- *kill-whole-line* C-S-BackSpace：删除整行，不管光标在该行何处，
+      且不留空行。
+
+	  /在命令行中，默认的快捷键一般无效。/
+*** 其它剪切命令
+	- *kill-region* C-w：剪切选中文本。
+	- *kill-ring-save* M-w：将选中文本push到 *kill-ring* 中。
+	- *kill-word* M-d：剪切下一个单词。
+	- *backward-kill-word* M-<DEL>：剪切上一个单词。
+	- *backward-kill-sentence* C-x <DEL>：向后删除至上一个句子。
+	- *kill-sentence* M-k：删除至句子末。
+	- *zap-to-char* M-z CHAR：删除至下一个字符CHAR。
+	- *kill-sexp* C-M-k：剪切平衡表达式。？？？
+*** 剪切配置
+
+	在只读文件中执行剪切操作时，会报错且发出警告声，不过实际上也会将剪
+	切内容push到 *kill-ring* 中。如需不发出警报声，可将变量
+	*kill-read-only-ok* 设置为non-nil。
+
+	如果将变量 *kill-do-not-save-duplicates* 设置为non-nil值，则不会记
+	录重复的剪切内容。
+** 粘贴
+   - *yank* C-y：粘贴上一个剪切的内容。
+*** 粘贴以往剪切的内容
+	- *yank-pop* M-y：在 *kill-ring* 中循环，替换上一个粘贴内容。
+
+	  上一条命令须为 *yank* 。原理为使指针指向 *kill-ring* 的不同项。
+      当下一次执行 *yank* 后，指针回到起点。一次循环后重头再来。
+*** 将多个剪切的内容粘贴到一起？？？
+** 图形界面的剪切和粘贴？？？
+** 其他向buffer添加文本的方法
+   - *appent-to-buffer* ：将选中文本添加到指定buffer后。
+
+	 添加到原来编辑后，光标最后停留的位置后。
+   - *append-to-file* ：将选中文本添加到指定file后。
+
+	 该文件会自动保存。
+   - *prepended-to-buffer* ：将选中文本添加到指定buffer前。
+   - *copy-to-buffer* ：将选中文本添加到指定buffer中，清空其原有内容。
+   - *insert-buffer* ：将buffer中所有内容插入到当前光标处。
+
+** 对“矩形”区域文本的操作
+   对编辑多列格式文本有用。（用到时再学此节）
+
+   选择方式：在“矩形”一角mark，再将光标移动到对角。
+** CUA快捷键绑定
+   使用 *cua-mode* 后可使用一些通常的按键方式，如C-c复制，C-v粘贴等。
+* 寄存器（registers）和书签 ？？？
+  可在寄存器中存储文本、矩形区域、位置、数字、窗口配置、文件名等。可使
+  用命令 *view-register* 查看存储的寄存器。
+
+  显示寄存器的命令会延迟一段时间，可通过变量 *register-preview-delay* 设
+  置，如不需延迟则设置为nil。
+
+  书签（bookmark）的本质和基本相同。
+
+** 在寄存器中存储位置
+   - *point-to-register* C-x r <SPC> R：将光标位置和当前buffer存入寄存
+     器R。
+   - *jump-to-register* C-x r j R：跳转到寄存器R的位置和buffer。
+   - *append-to-register* ：向寄存器R中添加文本。
+   - *increment-register* C-x r +：如果寄存器R有文本，可在其后添加文本。
+   - *prepend-to-register* <RET> R：在寄存器R前添加。
+
+** 在寄存器中存储文本
+** 在寄存器中存储矩形区域
+** 配置寄存器
+** 在寄存器中存储数字
+** 在寄存器中存储文件
+** 在寄存器中存储按键宏
+** 书签 - 相当于寄存器，不过会永久存在
+* 显示控制
+** 上下滚动
+   - *scroll-up-command* C-v：向前翻页。
+   - *scroll-down-command* M-v：向后翻页。
+	 向前翻页和向后翻页，都会预留上一页的2行文本，可通过变量
+     *next-screen-context-lines* 设置。
+
+	 这两个命令都可带数字参数，负数使两者功能恰好相反。
+
+	 可设置变量 *scroll-error-top-bottom* 使翻页到顶部和底部时再翻页报
+     错。
+
+	 将变量 *scroll-preserve-screen-position* 设置为non-nil值后，可使
+     来回翻页时保留光标位置。
+
+	 此外还有命令 *scroll-up-line* 和 *scroll-up-line* ，只上下翻一行。
+** 中心化文本
+   - *recenter-top-bottom* C-l：将当前行置于显示窗口中间，接下来再执行
+     此命令时将当前行置于顶部和底部。
+
+	 设置变量 *recenter-positions* 控制循环位置，默认值为(middle top
+     bottom)。如果是0.0-1.0之间的浮点数，表示离顶部的距离百分比。
+
+	 设置变量 *scroll-margin* 为非0的值N，则翻动后至少会在顶部/底部留
+     下N行。
+
+	 当使用参数N时不会在上中下3个位置循环，N如果是正数表示在顶部预留的
+     行数，如果是负数则表示在底部预留的行数。如果仅使用命令C-u C-l则只
+     是将当前行置于中间。
+
+	 将变量 *recenter-redisplay* 设置为non-nil值后，每次使用命令C-l后
+     都会重绘整个显示区域，特殊值tty表示仅在命令行中使用Emacs时才重绘。
+
+   - *recenter* ：将当前行置于显示窗口中间。
+
+	 与 *recenter-top-bottom* 的区别为只将当前行置于中间。
+
+   - *reposition-window* C-M-l：“自作聪明地”将有用信息滚动到显示窗口中间。
+
+	 如在lisp源代码文件中，将整个函数定义代码置于最易查看的位置。 /在
+     编写程序时非常有用。/
+
+** 自动滚动
+   当光标移动到显示窗口外时，Emacs会自动滚动一定距离，使光标出现在显示
+   区域中间。
+
+   控制自动滚动有3种变量方法：
+   1. *scroll-conservatively* ：？？？
+   2. *scroll-step* ：把本来不显示的行数拉出N行。
+   3. *scroll-up-aggressively* / *scroll-down-aggressively* ：0-1.0之
+      间的浮点数，表示光标所在行占整个显示区域的百分比。
+
+   如果3种方法都有设置，只会执行其中1种，执行顺序为上面顺序。
+** 水平滚动
+   ？？？
+** Narrow
+   - *narrow-to-region* C-x n n：只显示上一个mark到光标处的区域。
+   - *widen* C-x n w：完整显示Narrowed后的内容。
+   - *narrow-to-page* C-x n p：只显示当前页的内容。？？？
+   - *narrow-to-defun* C-x n d：只显示当前函数定义。
+** 阅读模式
+   - *view-mode* ：进入此模式后，不能输入。除一般的移动命令外，还可使
+     用<SPC>和<DEL>上下翻页。其它命令还有：
+	 - *view-quit* q：退出view mode，并关闭当前buffer，回到开启
+       view-mode前的buffer。
+	 - *view-quit* e：退出view-mode，保留当前buffer和光标位置。
+   - 此外还可使用命令 *view-buffer* 和 *view-file* 使用阅读模式查看
+     buffer和file。
+
+** 跟随模式（follow mode）
+   进入follow-mode后，可使2个窗口，显示相同buffer时，效果同另外一个
+   buffer如同链接在当前buffer后一样，翻动当前buffer可能会同时翻动另一
+   个。
+
+   使用步骤：
+   1. *split-window-right* C-x 3：将当前buffer水平分屏。
+   2. *follow-mode* ：开启follow mode。
+** 文本face
+   Emacs使用“face”将文本显示为不同样式。每一个face，可有不同属性，如字
+   体、高度、宽度、倾斜度、前景（foreground）和背景颜色、下划线和上划
+   线等。
+   - *list-faces-display* ：查看当前使用的face，如果跟前置参数（C-u）
+     则可提供正则过滤。
+
+   变量：
+   - *frame-background-mode* ：在深色和浅色背景中，大多数face的属性会
+     随之变化。Emacs会自动根据深色和浅色背景选择face的属性。设置此变量
+     为dark可使emacs认为所有背景都是深色，light则认为所有背景都为浅色。
+** face的颜色
+   face的颜色属性，可通过Emacs已知的颜色名如“dark orange”，和RGB方式如“#acacac”改
+   变。
+
+   - *list-color-display* ：列出颜色名称。排序方式可通过变量
+     *list-color-sort* 变量设置。
+   - *set-face-foreground* *set-face-background* ：改变face的前景/背景
+     颜色。
+
+	 /设置结果在退出后失效。/
+
+** 标准face
+   下面为设置文本样式的属性：
+   - default：普通文本，背景颜色为显示窗口的背景颜色。
+   - bold
+   - italic
+   - bold-italic
+   - underline
+   - fixed-pitch：强制使用宽度固定的字体。 /不建议对宽度变化的字体设置。/
+   - variable-pitch：强制使用宽度变化的字体。 /同上。/
+   - shadow：使文本不如周围文本明显。
+
+   下面为高亮文本的部分face：
+   - highlight：在不同环境中高亮文本，如鼠标经过链接时。
+   - isearch：高亮isearch匹配文本的face。
+   - query-replace：高亮查找替换匹配文本的face。
+   - lazy-highlight：高亮isearch和query-search匹配后非当前文本的face。
+   - region：显示选择后高亮文本的face。
+   - secondary-selection：？？？
+   - trailing-whitespace：高亮当变量 *show-trailing-whitespace* 设置为
+     non-nil值后的空白字符face。
+   - eacape-glyph：控制字符和“escape sequence”的face。
+   - nobreak-space：显示“no-break”空白字符的face。
+
+   下面为改变emacs不同显示部件的face：
+   - mode-line：所在窗口的状态栏face。
+   - mode-line-inactive：其他窗口状态栏的face。
+   - mode-line-highlight：与highlight的face相同，不过只适用于鼠标激活
+     时。
+   - mode-line-buffer-id：状态栏中显示buffer专有信息的face，如
+     buffer名。？？？
+   - head-line：窗口顶部的状态栏，只有部分模式中有，如info-mode。
+   - vertical-border：命令行环境中，分屏后个窗口的间隔竖线。
+   - minibuffer-prompt：控制minibuffer中文本的face。Emacs已自动将此属
+     性添加到了变量 *minibuffer-prompt-properties* 中。
+   - fringe：图像界面中finge的face。
+
+	 fringe：narrowed后文本区域与窗口左右边缘间的区域。
+   - cursor：其:background属性控制光标的颜色。 /只在图像界面环境中有效。/
+   - tooltip：提示文本的face。如果系统支持GTK，默认使用GTK的配置，此配
+     置无效。
+   - mouse：控制鼠标点样式的face。
+
+   下面的face只在命令行环境，以及无toolkit支持的环境中有效：
+   - scroll-bar：滚动条。
+   - tool-bar：工具栏图标。
+   - menu：
+   - tty-menu-enabled-face：
+   - tty-menu-disabled-face：
+   - tty-menu-selected-face：+
+** 调整字体大小 /只在图像界面下有效/
+   - C-x C-+ 或 C-x C-=：放大显示。
+   - C-x C--：缩小显示。
+   - C-x C-0：还原显示。
+
+   上面这3个快捷键都绑定在命令 *text-scale-adjust* 上，只是各自参数不
+   同。
+
+   如需连续放大，可不要前置C-x，如“C-x C-+ C-+ C-+”可连续放大3次。
+
+   每次放大/缩小的倍数为1.2倍，可通过变量 *text-scale-mode-step* 设置。
+
+   命令 *text-scale-increase* 和 *text-scale-decrease* 同
+   *text-scale-adjust* 命令相同，独立声明只是为了方便绑定快捷键。
+
+   *text-scale-set* ？？？
+
+** font-lock-mode -- 使用样式实现语法高亮
+   font-lock mode可告知major mode改变哪些文本的样式。如在prog-mode中，
+   区别显示注释、字符串和函数名等文本。
+
+   - *font-lock-mode* ：开启/关闭font-lock mode。
+
+	 默认全局开启。使用此函数时只针对当前buffer，正数参数表示无条件开
+     启，负数和0表示关闭。
+
+   - *global-font-lock-mode* ：全局打开/关闭font-lock mode。对应的同名
+     变量 *global-font-lock-mode* 表示开启或关闭，对此变量直接设置不会
+     有任何效果。
+
+	 如果全局禁用了此模式，可通过“钩子（hook）”为指定模式添加此功。
+     比如为C语言源文件添加此功能：
+
+	 #+BEGIN_SRC emacs-lisp
+       (add-hook 'c-mode-hook 'font-lock-mode)
+	 #+END_SRC
+
+   font-lock-mode使用多个face分别控制不同语法区域样式，如
+   font-lock-string-face、font-lock-comment-face等。比如将源代码函数名
+   改变为斜体加粗可的实现为：
+
+   #+BEGIN_SRC emacs-lisp
+     (set-face-attribute font-lock-function-name-face
+                         nil
+                         :bold t
+                         :italic t)
+   #+END_SRC
+
+   font-lock-mode利用变量 *font-lock-beginning-of-syntax-function* 决
+   定决定文本是否不是注释和字符串。
+** 交互式高亮
+*** 高亮修改内容
+	- *highlight-changes-mode* ：显示区别显示修改后的内容。
+*** 高亮满足正则的
+	- *hi-lock-mode* ：高亮匹配正则表达式的文本。
+	- *global-hi-lock-mode* ：全局开启hi-lock-mode。
+
+	*hi-lock-mode* 同font-lock-mode很相近，不过需使用指定正则来匹配显
+	示。开启此模式后可使用的配置命令为：
+
+	- *highlight-regexp* M-s h r REGEXP <RET> FACE：如需高亮"whim"，可
+      执行命令M-s h r whim <RET> <RET>，使当前文本中的"whim"使用默认的
+      背景色（黄色）高亮。
+
+	  将变量 *hi-lock-auto-select-face* 设置为non-nil值，可使
+      hi-lock-mode和font-lock-mode不提示选择face，而是自动选择下一个有
+      效face。
+
+	- *unhighlight-regexp* M-s h r REGEXP：去除对满足REGEXP正则文本的
+      高亮，会在minibuffer中提供选项，选中即可。
+
+	- *highlight-phrase* M-s h p：与 *highlight-regexp* 的区别？？？
+
+	- *highlight-symbol-at-point* M-s h .：高亮与光标所在位置相同的符
+      号。
+
+	- *hi-lock-write-interactive-patterns* M-s h w：将当前所有设置的高
+      亮正则和对应face插入到当前光标处，并注释掉。
+
+	- *hi-lock-find-patterns* M-s h f：？？？
+	  显示通过命令 *hi-lock-write-interactive-patterns* 命令写入当前文
+      件内的高亮项有几条。
+
+	  *hi-lock-file-patterns-policy*
+** 窗口边缘装饰  /只在图像界面中有效果/
+   - *fringe-mode* ：设置 /所有/ 窗口左右边缘的阴影装饰。
+
+	 此命令会调用另一条命令 *set-fringe-style* 设置装饰样式。
+
+   此装饰样式最大的用处就是，当当前行超过窗口宽度时，会在上面显示箭头
+   符号，标记此行未完全显示。
+** buffer的顶部和底部显示  /图像界面下有效果/
+** 无用的空白字符
+   - *show-trailing-whitespace* ：
+   - *delete-trailing-whitespace* ：删除所有行末多余的空白字符。
+
+	 如果变量 *delete-trailing-lines* 为nil则不删除buffer末尾多余的空
+     行。
+   - *whitespace-mode* ：显示/不显示当前buffer中的空白字符。只在当前
+     buffer中有效。
+** 选择性显示 /代码阅读时有用/
+   - *set-selective-display* C-x $：如果带参数(C-u)N，则缩进列数>=N的
+     行数不显示；不带参数则还原原来的显示。
+
+	 隐藏后的文本以"..."显示，如果设置变量
+     *selective-display-ellipses* 为nil，则不会有任何标记。
+
+** 配置状态栏显示
+   - *size-indication-mode* ：显示当前buffer的大小。
+   - *line-number-mode* ：显示当前行数。
+
+	 如果buffer被narrowed，显示的行数为可见文本中的行数。此时使用
+     *goto-line* 函数时不宜使用此值，而需通过函数 *what-line* 获取。
+
+	 如果buffer中的行数过大，emacs不会计算，取消此限制可将变量
+     *line-number-display-limit* 设置为nil。
+
+	 如果单行的字符数大于变量 *line-number-display-limit-width* 时，
+     Emacs也不会显示函数。
+
+   - *column-number-mode* ：显示当前列数。
+
+   - *display-time* ：显示时间。
+
+	 如需使用24小时格式，可设置变量 *display-time-24hr-fmt* 设置为t。
+
+   - *display-battery-mode* ：在笔记本上显示电池余量。设置变量
+     *battery-mode-line-format* 可控制显示格式。
+
+   状态栏中每项之间的间隔符号可由下列变量定制：
+   - *eol-mnemonic-unix*
+   - *eol-mnemonic-dos*
+   - *eol-mnemonic-mac*
+
+** 文本如何显示
+   大多数字符为"打印字符"：直接显示在屏幕上的字符。"印字符"包括：ANSII数
+   字、字母和标点符号，以及一些非ANSII字符。
+
+   ANSII字符中还包含非打印的"控制字符"。其中2个特殊显示的为换行符和tab
+   符号。tab符多宽由变量 *tab-width* 控制。
+
+   其它ANSII"控制字符"起十进制值都小于32。如字符"control-A"显示为""。󠇜
+
+** 光标显示
+   命令行环境中，光标基本上完全由命令行控制，可定制性不大。
+** 行截取 - 以便在单行中显示
+   - *toggle-truncate-lines* ：在当前buffer中打开/关闭truncate-lines样
+     式。
+
+	 开启时，如果单行文本超过窗口宽度，可能在前后出现"$"表示非完全显示。
+** 行折叠
+** 其他显示配置变量
+   - *visible-bell* ： 发出警报声的相同情况下，使屏幕闪烁。？？？
+   - *echo-keystrokes* ：组合键输入中途停顿多少时间提示。
+   - *make-pointer-invisible* ：输入时不显示鼠标符号。
+
+* 搜索和替换
+* 修改输入的命令
+** Undo
+   反悔undo的操作：undo后，执行不影响undo记录的命令（如C-f）在执行undo
+   即可。
+** 交换文本位置
+   - *transpose-chars* C-t：交换字符。
+   - *transpose-words* M-t：交换单词
+   - *transpose-sexps* C-M-t：交换平衡表达式。
+   - *transpose-lines* C-x C-t：交换行。
+** 改变大小写
+*** 针对文本区域
+	- *upcase-region* C-x C-u：大写。
+	- *downcase-region* C-x C-l：小写
+	- *capitalize-region* ：首字母大写。
+*** 针对单词
+	- *downcase-word* M-l：小写。
+	- *upcase-word* M-u：大写。
+	- *capitalize-word* M-c：首字母大写。
+** 拼写检查
+   - *ispell-word* M-$：检查当前单词。如果有文本高亮，检查文本区内的所
+     有单词。
+   - *ispell* ：检查整个buffer。如果有文本高亮，检查文本区内的所有单词。
+   - *ispell-buffer* ：检查整个buffer。
+   - *ispell-region* ：检查选中文本。
+   - *ispell-message* ：检查正在编写的邮件，不含引用内容。
+   - *ispell-change-directory* ：更换检查字典（UNIX系统自带）。
+   - *ispell-kill-ispell* ：杀死字典进程。
+   - *ispell-complete-word* <ESC> <TAB> ：根据字典补全。
+   - *flyspell-mode* ：启用即时检查功能。
+   - *flyspell-prog-mode* ：仅在注释和字符串中使用即时检查。
+
+   使用M-$命令后可进行的操作有：
+   - 数字：将当前的单词替换为数字对应的单词。
+   - <SPC> ：取消替换，保留错误提示。
+   - r NEW：直接替换。
+   - R NEW：直接替换，并可替换当前buffer中所有相同的错误单词。
+   - a：仅在当前"会话"中将其作为正确单词。
+   - A：仅在当前"buffer"中将其作为正确单词。
+   - i：将此单词作为正确单词，永久保存。
+   - m： 同i，不过可定制正确单词。
+   - u：将当前单词小写形式添加到字典中。
+   - l WORD：
+   - C-g 或 X：取消检查。
+   - x：取消检查，并将光标返回检查开始处。
+   - q：退出检查。
+   - ?：查看帮助。
+
+* 按键宏
+  - *kmacro-start-macro-insert-counter* <f3>：开始录制。
+  - *kmacro-end-or-call* <f4>：定制录制。如果已经停止，则执行。
+
+* 文件操作 /Emacs的主要结构/
+** 如何编辑文件名
+   - *completion-ignored-extensions* ： 查找文件时会忽略的后缀。
+   - *default-directory* ：每打开一个文件时，都会为当前buffer生成这个
+     本地变量，即当前buffer对应文件所处的文件夹。
+   - *pwd* ：查看 *default-directory* 变量的值。
+   - *cd* ：改变变量 *default-directory* 的值。
+
+   文件名中有"$"时，如果shell中export了对应的变量，将解释为该变量值，
+   否则为其本身。
+
+** 访问文件
+   - *find-file* C-x C-f：打开文件。
+   - *find-file-read-only* C-x C-r：打开文件，只是阅读，不允许修改。
+   - *find-alternate-file* C-x C-v：？？？
+   - *find-file-other-window* C-x 4 f：在另外一个窗口中打开文件。
+   - *find-file-other-frame* C-x 5 f：在另外一个frame中打开文件。
+   - *find-file-literally* ：？？？
+
+   打开文件后，状态栏中显示的buffer名通常与文件名相同。如果已存在相同
+   的buffer名，每个buffer名后面会显示上层文件夹，以区别。
+
+   如果输入的文件名为文件夹，会进入dired模式，如需禁用此功能可设置变量
+   *find-file-run-dired* 为nil。
+
+   如果访问的文件为“自读”文件，可使用C-x C-q进行编辑。
+
+** 保存buffer到文件
+*** 保存命令
+	- *save-buffer* C-x C-s：保存当前文件。
+	- *save-some-buffers* C-x s：保存所有未保存的文件。
+	- *not-modified* M-~：忽略修改过的内容，当做修改；如果带参数，即使
+      没修改过也当修改过。
+	- *write-file* C-x C-w：另存为。
+	- *set-visited-file-name* ：修改当前buffer对应的文件名。
+
+*** 备份
+	- *make-backup-files* ：设置是否自动生成备份文件。
+	- *vc-make-backup-files* ：是否生成版本管理的备份文件。
+**** 备份文件命名
+	 备份文件通常由"~"结尾。
+
+	 - *version-control* ：是否生成多个备份文件。可取值为：
+	   1. nil：如果有多个备份，每个都备份，否则只有一个备份。
+	   2. t：生成多个备份。
+	   3. never：总是只有一个备份。
+	 - *backup-directory-alist* ：指定哪些文件夹中的文件需备份。
+**** 删除备份文件
+	 如果有多个备份，新备份生成时会自动删除一些，保留几个最新和最旧的
+	 备份。
+
+	 - *kept-old-versions* ：最旧备份的保存数量。
+	 - *kept-new-versions* ：最新备份的保存数量。
+
+**** 复制备份文件
+*** 定制文件保存
+	- *require-final-newline* ：保存时是否在buffer末没有换行符时添加一
+      个可取值为：
+	  1. visit：只有访问后的才添加。
+	  2. visit-save：访问后和保存时都添加。
+	  3. nil：不添加。
+*** 如何确保2个用户不同时编辑一个文件
+*** shadow
+*** 时间戳
+** 忽略未保存的修改
+** 自动忽略非文件buffer
+** 自动保存
+** 文件别名
+** 添加、删除和列出文件夹
+** 文件内容比较
+** 其他文件操作
+** 访问压缩文件
+** 远程文件操作
+** 文件名中的特殊字符
+** 缓存文件名
+** 查找文件的快捷方式
+** 成组操作文件
+* 使用多个buffer
+* 多窗口
+** 窗口介绍
+** 分屏
+ - *split-window-below* C-x 2：上下分屏。
+
+   默认情况下分屏后两个窗口高度相等，可使用前置参数N改变大小，如果为正
+   数 表示新窗口多占的行，负数表示新窗口少占的行。
+
+ - *split-window-right* C-x 3：左右分屏。
+
+   默认情况下分屏后两个窗口宽度相等，可使用前置参数N改变大小，如果为正
+   数 表示新窗口多占的列，负数表示新窗口少占的列。
+** 跳转
+   - *other-window* C-x 0：跳转到另一个窗口。
+
+	 跳转顺序为：上 -> 下，左 -> 右边。
+
+	 前置参数N表示跳转步数，负数表示反方向跳转。
+
+   - *scroll-other-window* C-M-v：向上滚动下一个窗口。
+
+	 如果带前置参数N，则效果相当于在另一个窗口执行C-v命令。
+
+** 在另一个窗口打开文件或buffer
+** 删除和改变窗口大小
+   - *delete-window* C-x 0：删除当前窗口。
+   - *kill-buffer-and-window* C-x 4 0：删除当前窗口，并删除当前buffer。
+   - *delete-other-windows* C-x 1：只保留当前窗口。
+   - *enlarge-window* C-x ^：将当前窗口变高。
+
+	 前置参数N表示行数。如果操作结果小于变量 *window-min-height* 会报
+     错。
+
+   - *enlarge-window-horizontally* C-x }：将当前窗口变宽。
+   - *shrink-window-horizontally* C-x {：将当前窗口变窄。
+
+	 前置参数N表示列数。如果操作结果小于变量 *window-min-width* 会保存。
+
+   - *shrink-window-if-larger-than-buffer* C-x -：如果当前buffer中的行
+     数不多，不需要当前窗口的高度，将其变矮。
+   - *balance-window* C-x +：将所有窗口变得一样高。
+
+** 显示buffer
+** 窗口操作的快捷方式
+* Frams和图形显示
+* 字符设置国际化
+* Major和Minor模式 /高级特性/
+** 主模式
+   主模式大致可分为3类：
+   1. 包含常规文本或标记语言，含HTML mode、SGML mode、Tex mode和
+      Outline mode。
+   2. 针对编程语言，如C mode等。
+   3. 不针对文件，而是一些特殊的buffer，如Dired mode。
+
+   除fundamental-mode外，每一个主模式都对应有一个hook（“钩子”），即一个由函数
+   构成的链表，当该模式加载后“钩子”内的函数顺序执行。最常用法是为主模
+   式添加副模式：
+
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'text-mode-hook 'flyspell-mode)
+     (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+   #+END_SRC
+** 副模式
+** 模式选择
+* 缩进
+* 非编程文本相关命令
+* 程序编辑
+* 程序编译和测试
+* 大型程序维护
+* Abrrevs
+* Dired -- 文件夹编辑
+* 日历和日记
+* 发送邮件
+* 使用Rmail阅读邮件
+* 其他命令
+* 插件（package）管理
+* 定制
+* 常见问题排查
+* 附录C：Emacs命令行启动参数

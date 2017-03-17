@@ -1,0 +1,22 @@
+* Evil
+** 概况
+*** 安装
+    (add-to-list 'load-path "~/.emacs.d/evil")
+    (require 'evil)
+    (evil-mode 1)
+*** mode和state
+    - C-z :: 在Emacs和Vim模式之间切换。
+Vim模式下状态栏的标记为<N>，"Normal state"；Emacs下状态栏的标记为<E>，"Emacs sate"。
+
+Vim模式下的状态有：
+- <N> :: nomal state。
+- <I> :: insert state。
+- <V> :: Visual state。
+- <R> :: Replace state。
+- <O> :: Operator-Pending state。
+- <M> :: Motion state。
+
+** 设置
+** 快捷键
+** 钩子
+** 宏

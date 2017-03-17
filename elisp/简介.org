@@ -1,0 +1,3 @@
+* 简介
+
+  需熟悉 /The GNU Emacs Manual/ 。
