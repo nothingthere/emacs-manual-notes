@@ -104,10 +104,106 @@
    #+END_SRC
 
 * 查找和修改
-** 时间
-** 正则匹配和替换
+
+   - *current-time-string* ：返回当前时间的字符串。很不灵活。
+   - *current-time* ：返回当前时间的原始值。
+   - *format-time-string* ： 指定模板，将current-time返回的时间原始值
+     转换为字符串。模板中占位符同命令行命令date相同。
+   - *defvar* ：如果文档字符串首字母为星号（*），表示可随时修改，即通
+     过set-variable实现交互式赋值，且如果赋值为字符串，可不加双引号。
+   - *interactive* ：如果参数字符串第一个字符为星号（*）表示不能在自读
+     文件中编辑。
+
+   函数执行时保留原来信息的宏：
+
+   - *save-restriction* ：保留widen/narrow状态。
+   - *save-excursion* ：保留光标位置。
+   - *save-match-data* ：保留原来正则匹配的信息不变。由于所有正则匹配
+     结果都会添加到一个对象上，所以在改变此对象的操作中很有用。
+   - *widen* ：还原原来narrowed后的显示状态。
+
+   搜索匹配：
+
+   - *search-forward* / *search-backward* ：从光标当前位置搜索第一个字
+     符串参数指定的内容。如果搜索成功，将光标置于匹配内容后，且返回该
+     位置。
+
+     第二个可选参数，表示搜索范围，如果指定，则只能在该位置前搜索；如
+     果为nil，则表示最多个搜索到文本末尾。
+
+     第三个可选参数，表示是否报告错误，如果为nil，搜索失败只是返回nil；
+     如果为t，则搜索失败后返回错误，不进行后面的命令。
+
+     第四个可选参数，表示匹配个数。如果为数值，表示搜索匹配个数，如果
+     为负数则表示向后搜索匹配个数。
+
+   - *re-search-forward* / *re-search-backward* ：与search-forward的用
+     法完全相同，只是第一个参数可为正则表达式。
+
+   - *regexp-quote* ：将字符串转换为正则字符串，主要功能为去除原字符串
+     中的特殊字符。
+
+   - *match-beginning* ：第一个参数数字，为上个搜索中匹配正则表达式中的括号
+     位置，即正则的反向引用。如果为0，则表示整个搜索的起始位置。
+
+   - *replace-match* ：替换上个正则搜索时匹配的内容。
+
+     - 第一个参数为替换内容。
+     - 第二个参数表示是否修饰大小写，如果为non-nil则将替换内容的大小写
+       形式尽量转换为和原来字符相同。
+     - 第三个参数表示是否使用第一个参数的原有形式，如果为nil，见文档:smile:。
+     - 第四个参数如果为字符串，则是替换此字符串，而非buffer中匹配的内
+       容。
+     - 第五个参数为整数，表示替换原文本中匹配正则的反向引用位置，而非
+       整个匹配区域。
+
 * 配置文件
+  - *load-path* ：所有配置文件绝对路径组成的字符串链表。
+  - *load-file* ：交互式加载配置文件。
+  - *load-library* ：？？？。
+  - *require* ：加载模块。在load-path所指定的路径中寻找与其参数相同的
+    文件名，并加载，如果已经加载则忽视。加载原则为，如果相同路径下同
+    名.elc的文件，则先加载此文件，如果无才加载.el文件。
+  - *provide* ：如果配置文件需要被require加载，该文件中需声明provide。
+    且一般在最后，这样可让require在加载是如果发现配置文件中有错误，则
+    决绝加载该配置。
+  - *byte-compile-file* ：编译配置文件。
+  - *byte-compile-directory* ：编译配置文件夹。
+  - *eval-after-load* ：在某特性加载后才执行。比如希望修改dired中的
+    dired-sort-toggle函数，只有在加载该模块后才能实现：
+
+  #+BEGIN_SRC emacs-lisp :session
+    (eval-after-load
+        "dired"
+      (defun dired-sort-toggle()
+        ""
+        ))
+  #+END_SRC
+
 * 链表
+  *nthcdr* ：返回链表的第N个cdr结果：
+  
+  #+BEGIN_SRC emacs-lisp :session
+    (nthcdr 3 '(1 2 3 4))
+  #+END_SRC
+  
+  #+RESULTS[56d2a3ee0abf66492dcb8a84b495ac01878cf0a7]:
+  : (4)
+  
+  *eq* 和 *equal* ：不同于commom lisp，Elisp中只有这两个相等比较操作符。
+  其中eq表示两个对象是内存意义上完全相同的对象，而equal则是表示看起来
+  相同的两个对象。
+  
+  历遍assoc链表时，如果需更改原来数据，可使用setcdr函数直接修改，以提
+  升效率，如下面的函数定义：
+  
+  #+BEGIN_SRC emacs-lisp :session
+    (defun alist-replace(alist key new-value)
+      (let ((sublist (assoc key alist)))
+        (when sublist
+          (setcdr sublist new-value))))
+  #+END_SRC
+  
 * Minor Mode
 * 执行和报错
 * major mode
