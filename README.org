@@ -1,7 +1,6 @@
 #+TITLE: Emacs学习笔记
 
 * [[file:%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8.org][Emacs快速入门]]
-
 * [[file:org/README.org][org学习笔记]]
 
 * [[file:%E5%A6%82%E4%BD%95%E9%98%85%E8%AF%BB%E5%86%85%E7%BD%AE%E6%89%8B%E5%86%8C.org][如何阅读Emacs内置手册]]

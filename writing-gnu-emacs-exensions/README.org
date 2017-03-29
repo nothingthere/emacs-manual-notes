@@ -1,0 +1,114 @@
+#+TITLE: /Writing GNU Emacs Extensions/ 学习笔记
+
+* 定制Emacs
+
+  全局快捷键设置方式：
+
+  #+BEGIN_EXAMPLE
+    (global-set-key 快捷键字符串 命令)
+  #+END_EXAMPLE
+
+  比如：
+
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key "\M-?" 'help-command)
+  #+END_SRC
+
+  “\M-?”实际上是长度为1的字符串：
+
+  #+BEGIN_SRC emacs-lisp :session
+    (length "\M-?")
+  #+END_SRC
+
+  #+RESULTS[ad948aa7ef343a1cc218f8d9286e4323fa8c2f7b]:
+  : 1
+
+  解除默认禁用命令的方法为使用put函数：
+
+  #+BEGIN_SRC emacs-lisp :session
+    (put 'eval-expression 'disabled nil)
+  #+END_SRC
+
+  通过关键字查找命令或变量：
+
+  #+BEGIN_EXAMPLE
+    M-x apropos RET 关键字（可为多个） RET
+  #+END_EXAMPLE
+
+* 简单命令
+  interactive函数中，如果交互调用函数小写p代表将参数解释为数字，如果无
+  参数，将参数默认为1：
+
+  #+BEGIN_SRC emacs-lisp :session
+    (interactive "p")
+  #+END_SRC
+
+  大写P则是表示将参数解释为字符串，可使用prefix-numeric-value转换为数
+  字。
+
+  使用defalias可为函数另外取个名字，原来的的函数保持不变。如不容易将
+  scroll-up和scroll-down函数搞混，可另外增加名字：
+
+  #+BEGIN_SRC emacs-lisp :session
+    (defalias 'scroll-ahead 'scroll-up)
+    (defalias 'scroll-behind 'scroll-down)
+  #+END_SRC
+
+ - *file-symlink-p* ：可判断文件是否为软连接文件。
+ - *buffer-read-only* ：将此值设置为t后，文件将不能编辑。
+ - *find-file-hook* ：加载文件到buffer后调用的hook，buffer本地变量会先
+   被处理。
+
+   使用C-u提供前置参数时的不同解释：
+
+   | 命令                   | 原值                 | 数值         |
+   |------------------------+----------------------+--------------|
+   | C-u 后跟数值（可为负） | 数字本身             | 数字本身     |
+   | C-u - （后无数值）     | 符号-                | -1           |
+   | C-u 持续n次            | 含数值4的n次方的链表 | 数值4的n次方 |
+   | 无                     | nil                  | 1            |
+
+* 综合多个命令
+
+  - *point* ：返回光标所在位置。
+  - *window-start* ：返回整个显示区域左上角字符的位置。
+  - *goto-char* ：将光标置于指定位置，参数可为整数或marker。
+  - *set-window-start* ：将指定位置显示下左上角。第一个参数为window对
+    象，如果为nil表示当前窗口；第二个参数可为整数或marker。
+  - *last-command* ：上一条命令。
+  - *this-command* ：当前执行的命令，执行下一条命令时自动变为
+    *last-command* 。
+
+  每个symbol都有一个属性链表，可使用symbol-plist函数获取，添加和修改使
+  用put函数，获取使用get函数：
+
+  #+BEGIN_SRC emacs-lisp
+    (symbol-plist 'foo)
+    (put 'foo 'bar 1)                       ;添加
+    (put 'foo 'bar nil)                     ;去除
+  #+END_SRC
+
+** marker
+   相当于point不过只要指定值后，无论插入还是删除文本，其位置都不变，所
+   以很影响性能，一般作法是不需要时去除：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (set-marker m nil)
+   #+END_SRC
+
+   声明方法为先声明marker变量，在指定其对应的point：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (defvar m (make-marker))
+     (set-marker m (point))
+   #+END_SRC
+
+* 查找和修改
+** 时间
+** 正则匹配和替换
+* 配置文件
+* 链表
+* Minor Mode
+* 执行和报错
+* major mode
+* 一个完整的例子
