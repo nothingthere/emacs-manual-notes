@@ -205,6 +205,11 @@
   #+END_SRC
   
 * Minor Mode
+  
+  - *beginning/end-of-defun* C-M-a/e：跳转到定义首/末。
+    
+  Fundamental Mode是最基础的Major Mode，里面无任何特性。
+  
 * 执行和报错
 * major mode
 * 一个完整的例子

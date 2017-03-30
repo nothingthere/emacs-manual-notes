@@ -1,0 +1,8 @@
+#+TITLE: company插件学习笔记
+
+* 工作原理
+  编辑文本时，逐个搜索搜索company-backends中的backend，直到匹配到某个backend。
+
+* 各个backend的功能
+** company-dabbrev
+   补全所有buffer中出现的词。
