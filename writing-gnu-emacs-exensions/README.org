@@ -1,4 +1,4 @@
-#+TITLE: /Writing GNU Emacs Extensions/ 学习笔记
+#+TITLE: 《Writing GNU Emacs Extensions》 学习笔记
 
 * 定制Emacs
 
@@ -20,7 +20,7 @@
     (length "\M-?")
   #+END_SRC
 
-  #+RESULTS[ad948aa7ef343a1cc218f8d9286e4323fa8c2f7b]:
+  #+RESULTS:
   : 1
 
   解除默认禁用命令的方法为使用put函数：
@@ -44,10 +44,9 @@
   #+END_SRC
 
   大写P则是表示将参数解释为字符串，可使用prefix-numeric-value转换为数
-  字。
 
   使用defalias可为函数另外取个名字，原来的的函数保持不变。如不容易将
-  scroll-up和scroll-down函数搞混，可另外增加名字：
+  scroll-up和scroll-down函数搞混，可另外添加名字：
 
   #+BEGIN_SRC emacs-lisp :session
     (defalias 'scroll-ahead 'scroll-up)
@@ -56,8 +55,7 @@
 
  - *file-symlink-p* ：可判断文件是否为软连接文件。
  - *buffer-read-only* ：将此值设置为t后，文件将不能编辑。
- - *find-file-hook* ：加载文件到buffer后调用的hook，buffer本地变量会先
-   被处理。
+ - *find-file-hook* ：加载文件到buffer后调用的hook，buffer本地变量会先被处理。
 
    使用C-u提供前置参数时的不同解释：
 
@@ -73,7 +71,7 @@
   - *point* ：返回光标所在位置。
   - *window-start* ：返回整个显示区域左上角字符的位置。
   - *goto-char* ：将光标置于指定位置，参数可为整数或marker。
-  - *set-window-start* ：将指定位置显示下左上角。第一个参数为window对
+  - *set-window-start* ：将指定位置显示下左上角。 第一个参数为window对
     象，如果为nil表示当前窗口；第二个参数可为整数或marker。
   - *last-command* ：上一条命令。
   - *this-command* ：当前执行的命令，执行下一条命令时自动变为
@@ -182,34 +180,56 @@
 
 * 链表
   *nthcdr* ：返回链表的第N个cdr结果：
-  
+
   #+BEGIN_SRC emacs-lisp :session
     (nthcdr 3 '(1 2 3 4))
   #+END_SRC
-  
+
   #+RESULTS[56d2a3ee0abf66492dcb8a84b495ac01878cf0a7]:
   : (4)
-  
+
   *eq* 和 *equal* ：不同于commom lisp，Elisp中只有这两个相等比较操作符。
   其中eq表示两个对象是内存意义上完全相同的对象，而equal则是表示看起来
   相同的两个对象。
-  
+
   历遍assoc链表时，如果需更改原来数据，可使用setcdr函数直接修改，以提
   升效率，如下面的函数定义：
-  
+
   #+BEGIN_SRC emacs-lisp :session
     (defun alist-replace(alist key new-value)
       (let ((sublist (assoc key alist)))
         (when sublist
           (setcdr sublist new-value))))
   #+END_SRC
-  
+
 * Minor Mode
-  
+
   - *beginning/end-of-defun* C-M-a/e：跳转到定义首/末。
-    
+
   Fundamental Mode是最基础的Major Mode，里面无任何特性。
-  
+
+  定义副模式的基本结构：
+
+  #+BEGIN_SRC emacs-lisp :session
+    (define-minor-mode claudio-fill-mode
+      "输入文本时自动对其段落."
+      :init-value nil
+      :lighter " Cf"
+      (make-local-variable 'after-change-functions)
+      (if claudio-fill-mode
+          (add-hook 'after-change-functions #'claudio-fill-refill nil t)
+        (remove-hook 'after-change-functions #'claudio-fill-refill t))
+      )
+
+    ;;;###autoload
+    (defun claudio-fill-refill(start _end len)
+      )
+  #+END_SRC
+
+  使用define-minor-mode宏，其中init-value值为claudio-fill-mode对应变量
+  名的值；lighter的值为显示在状态栏的模式名称，需以空格字符开始。&body
+  部分为该模式启动后立即执行的语句。其他参数可参考文档:smile:。
+
 * 执行和报错
 * major mode
 * 一个完整的例子

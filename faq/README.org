@@ -1,0 +1,157 @@
+#+TITLE: 各种不解笔记
+
+* Syntax Table （参考自 [[https://www.emacswiki.org/emacs/EmacsSyntaxTable][Wiki]]，以下简称语法表）
+** 基础
+   使用C-h s命令可查看当前的语法表。
+
+   不同字符类代表的不同含义：
+
+   | 字符   | 含义            | 字符 | 含义                      |
+   |--------+-----------------+------+---------------------------|
+   | -      | 空白字符        | /    | character quote character |
+   | w      | 单词组成        | $    | 成对边界符                |
+   | 下划线 | symbol组成      | ’    | 表达式前缀                |
+   | .      | 标点字符        | <    | 注释起始                  |
+   | (      | 字符起始组成    | >    | 注释结束                  |
+   | )      | 字符结尾组成    | !    | 通用注释组成              |
+   | "      | 字符串quote字符 | 竖线 | 通用字符串组成            |
+   | \      | 转义字符        | @    | 集成standard-syntax-table |
+
+   比如w(单词组成)包含了无数字符，如a-z0-9，但不包含%$等字符，及中文字
+   符等。
+
+   可使用char-syntax函数返回字符所属类：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (char-to-string (char-syntax ?+ ))
+   #+END_SRC
+
+   在正则中也可使用上表列出的的类，如"\sc"，其中c为上表列出的符号。如
+   "\s("将匹配所有起始边界，而"\S("则是匹配所有非字符起始边界，相当于
+   "\W"。
+
+   #+BEGIN_SRC emacs-lisp :session
+     (string-match-p "\\W" "hello world")
+   #+END_SRC
+
+   #+RESULTS:
+   : 5
+
+** 基本的语法表
+   - standard-syntax-table：返回Emacs的基础语法表。绝大多数主模式都继
+     承。
+
+   #+BEGIN_SRC emacs-lisp
+     (standard-syntax-table)
+   #+END_SRC
+
+   - text-mode-syntax-table：用于编辑文本文件的语法表。
+   - c-mode-syntax-table：C语言buffer的语法表。
+   - java-mode-syntax-table：Java语言语法表。
+   - emacs-lisp-mode-syntax-table：
+   - lisp-mode-syntax-table：
+   - lisp-interaction-mode-syntax-table：用于*scratch* buffer。
+   - message-mode-syntax-table：
+
+** 如果定义新的Syntax Table
+
+   语法表实际上是字符表，所以可使用make-char-table函数定义。默认为空字
+   符表，不过可使用初始值。初始值可使用string-to-syntax函数帮助生成。
+   #+BEGIN_SRC emacs-lisp :session
+     (setq my-table (make-char-table 'syntax-table nil))
+     (setq my-table (make-char-table 'syntax-table (string-to-syntax "w")))
+   #+END_SRC
+
+   实际使用过程中，通畅做法是利用现有的基础语法表，再对其更改。下面分
+   别利用基础语法表和text主模式的语法表：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (setq my-table (make-syntax-table))
+     (setq my-table (make-syntax-table text-mode-syntax-table))
+   #+END_SRC
+
+** 定制Syntax Table
+   使用modify-syntax-entry函数可修改已有语法表。
+
+   如lisp主模式下将单引号作为表达式前缀：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (modify-syntax-entry ?' "'")
+   #+END_SRC
+
+   将方括号作为单词内容，而非边界：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (modify-syntax-entry ?\[ "w")
+     (modify-syntax-entry ?\] "w")
+   #+END_SRC
+
+   在text mode下将$作为与自身配对的边界：
+
+   #+BEGIN_SRC emacs-lisp :session
+     (modify-syntax-entry ?$ "$" text-mode-syntax-table)
+   #+END_SRC
+
+   下面为定制语法表的通常做法：
+   Hi, I'am claudio
+   #+BEGIN_SRC emacs-lisp :session
+     (defvar my-syntax-table
+       (let ((table (make-syntax-table)))
+         (modify-syntax-entry ?\[ "w" table)
+         (modify-syntax-entry ?\] "w" table)
+         table))
+   #+END_SRC
+** 语法标记（Syntax Flags）
+   [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Syntax-Flags.html#Syntax-Flags][参考于gnu官网]]
+
+   上表中不同字符类还可添加下面的标记，假设为c字符类的标记则
+
+   | 标记 | 含义                                              |
+   |------+---------------------------------------------------|
+   | 1    | c为2个字符长度的 起始 注释第一个字符              |
+   | 2    | c为2个字符长度的 起始 注释第二个字符              |
+   | 3    | c为2个字符长度的 结束 注释第一个字符              |
+   | 4    | c为2个字符长度的 结束 注释第二个字符              |
+   | b    | c为“b”形式注释的边界字符。                        |
+   |      | 对于2个字符长度的注释，只对起始注释的第一个字符， |
+   |      | 以及结束注释的第二个字符有效。？？？              |
+   | c    | c为“c”形式注释的边界。                            |
+   |      | 对于2个字符长度的注释，对其中任意一个都有效。     |
+   | n    | 如果用于注释字符，表示此注释可嵌套。              |
+   |      | 对于2个字符长度的注释，可让任意一个都可嵌套。     |
+   | p    | 让字符如果处于表达式间，被认为是空白字符，        |
+   |      | 如果在其他地方维持原来含义。                      |
+
+   可见，除p外，其它标记都用于指定注释边界。
+
+   如规定C语言注释，大致可写为：
+
+   #+BEGIN_SRC emacs-lisp
+     (modify-syntax-entry ?\/ ". 124b" my-syntax-table)
+     (modify-syntax-entry ?* ". 23" my-syntax-table)
+     (modify-syntax-entry ?\n "> b" my-syntax-table)
+   #+END_SRC
+
+   *？* ：   不懂啥子是b形式和c形式的注释风格。
+
+   即时利用了语法标记声明语法表，还是不能使用M-;快捷插入注释，解决办法
+   参考自：[[http://ergoemacs.org/emacs/elisp_comment_handling.html]]
+
+   #+BEGIN_SRC emacs-lisp :session
+     (define-derived-mode css-mode fundamental-mode "CSS"
+       "Major mode to edit Cascading Style Sheets."
+
+       (setq-local font-lock-defaults css-font-lock-defaults)
+
+       (setq-local comment-start "/*")
+       (setq-local comment-start-skip "/\\*+[ \t]*")
+       (setq-local comment-end "*/")
+       (setq-local comment-end-skip "[ \t]*\\*+/")
+
+       ;; ...
+
+       )
+   #+END_SRC
+* Emacs25.1在命令行中重启后不能还原原来的窗口
+  
+  没找到解决办法，还是用回Emacs24.5。:disappointed:
